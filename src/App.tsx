@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Advisors from "./pages/Advisors";
 import Chat from "./pages/Chat";
 import PersonaChat from "./pages/PersonaChat";
+import BookChat from "./pages/BookChat";
 import Library from "./pages/Library";
 import History from "./pages/History";
 import Auth from "./pages/Auth";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/advisors" element={<Advisors />} />
             <Route path="/chat/:advisorId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
             <Route path="/persona/:personaId" element={<ProtectedRoute><PersonaChat /></ProtectedRoute>} />
+            <Route path="/book/:bookId" element={<ProtectedRoute><BookChat /></ProtectedRoute>} />
             <Route path="/library" element={<Library />} />
             <Route path="/history" element={<History />} />
             {/* Admin Routes */}

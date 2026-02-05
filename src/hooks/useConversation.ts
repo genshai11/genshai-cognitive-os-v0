@@ -9,7 +9,7 @@ interface Message {
 
 interface UseConversationProps {
   advisorId: string;
-  advisorType: 'framework' | 'persona';
+  advisorType: 'framework' | 'persona' | 'book';
 }
 
 export const useConversation = ({ advisorId, advisorType }: UseConversationProps) => {
