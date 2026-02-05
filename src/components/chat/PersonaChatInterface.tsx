@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Loader2, ArrowLeft, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -6,12 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { PersonaAdvisor } from '@/lib/persona-advisors';
 import { useToast } from '@/hooks/use-toast';
+import { useConversation } from '@/hooks/useConversation';
 import { MessageContent } from './MessageContent';
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
 
 interface PersonaChatInterfaceProps {
   persona: PersonaAdvisor;
@@ -21,7 +17,10 @@ const PERSONA_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pers
 const CONTEXT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-persona-context`;
 
 export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { messages, loading: conversationLoading, addMessage, updateLastAssistantMessage, saveMessage } = useConversation({
+    advisorId: persona.id,
+    advisorType: 'persona',
+  });
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [webContext, setWebContext] = useState<string | null>(null);
@@ -73,8 +72,9 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = { role: 'user', content: input.trim() };
-    setMessages(prev => [...prev, userMessage]);
+    const userMessage = { role: 'user' as const, content: input.trim() };
+    addMessage(userMessage);
+    saveMessage(userMessage);
     setInput('');
     setIsLoading(true);
 
@@ -142,21 +142,18 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
             const content = parsed.choices?.[0]?.delta?.content;
             if (content) {
               assistantContent += content;
-              setMessages(prev => {
-                const last = prev[prev.length - 1];
-                if (last?.role === 'assistant') {
-                  return prev.map((m, i) => 
-                    i === prev.length - 1 ? { ...m, content: assistantContent } : m
-                  );
-                }
-                return [...prev, { role: 'assistant', content: assistantContent }];
-              });
+              updateLastAssistantMessage(assistantContent);
             }
           } catch {
             buffer = line + '\n' + buffer;
             break;
           }
         }
+      }
+
+      // Save complete assistant message
+      if (assistantContent) {
+        saveMessage({ role: 'assistant', content: assistantContent });
       }
     } catch (error) {
       console.error('Chat error:', error);
@@ -176,6 +173,14 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
       handleSubmit(e);
     }
   };
+
+  if (conversationLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-background">
