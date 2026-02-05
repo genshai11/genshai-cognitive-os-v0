@@ -1,12 +1,14 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Brain, Menu, LogIn, LogOut, User, History as HistoryIcon } from 'lucide-react';
+import { Brain, Menu, LogIn, LogOut, User, History as HistoryIcon, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdmin } from '@/hooks/useAdmin';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -17,6 +19,7 @@ const navItems = [
 
 export const Header = () => {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const location = useLocation();
 
   const allNavItems = user 
@@ -64,6 +67,18 @@ export const Header = () => {
                     History
                   </Link>
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+                      <Link to="/admin">
+                        <Settings className="w-4 h-4" />
+                        Admin Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} className="gap-2 cursor-pointer text-destructive focus:text-destructive">
                   <LogOut className="w-4 h-4" />
                   Sign Out
