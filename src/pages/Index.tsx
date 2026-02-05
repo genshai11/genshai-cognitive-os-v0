@@ -1,12 +1,25 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Header } from '@/components/layout/Header';
+import { Hero } from '@/components/landing/Hero';
+import { AdvisorShowcase } from '@/components/landing/AdvisorShowcase';
+import { ValueProps } from '@/components/landing/ValueProps';
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="pt-16">
+        <Hero />
+        <AdvisorShowcase />
+        <ValueProps />
+      </main>
+      
+      {/* Footer */}
+      <footer className="py-12 px-6 border-t border-border">
+        <div className="max-w-6xl mx-auto text-center text-muted-foreground">
+          <p className="font-serif text-lg mb-2">MindBoard</p>
+          <p className="text-sm">Your personal board of advisors. Think better, decide better.</p>
+        </div>
+      </footer>
     </div>
   );
 };
