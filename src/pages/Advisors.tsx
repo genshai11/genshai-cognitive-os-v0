@@ -1,12 +1,37 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, User, Brain } from 'lucide-react';
+import { ArrowRight, User, Brain, BookOpen } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { advisors } from '@/lib/advisors';
 import { personaAdvisors } from '@/lib/persona-advisors';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Book {
+  id: string;
+  title: string;
+  author: string;
+  description: string | null;
+  cover_emoji: string | null;
+  color: string | null;
+  genres: string[] | null;
+  key_concepts: string[] | null;
+}
 
 const Advisors = () => {
+  const { data: books = [] } = useQuery({
+    queryKey: ['all-books'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('custom_books')
+        .select('id, title, author, description, cover_emoji, color, genres, key_concepts')
+        .eq('is_active', true);
+      if (error) throw error;
+      return data as Book[];
+    },
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -22,19 +47,23 @@ const Advisors = () => {
               Choose Your Advisor
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Select a mental model framework or chat directly with legendary thinkers.
+              Chat with legendary thinkers, mental frameworks, or timeless books.
             </p>
           </motion.div>
 
           <Tabs defaultValue="personas" className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-10">
+            <TabsList className="grid w-full max-w-lg mx-auto grid-cols-3 mb-10">
               <TabsTrigger value="personas" className="gap-2">
                 <User className="w-4 h-4" />
-                Persona Advisors
+                Personas
               </TabsTrigger>
               <TabsTrigger value="frameworks" className="gap-2">
                 <Brain className="w-4 h-4" />
-                Mental Frameworks
+                Frameworks
+              </TabsTrigger>
+              <TabsTrigger value="books" className="gap-2">
+                <BookOpen className="w-4 h-4" />
+                Books
               </TabsTrigger>
             </TabsList>
 
@@ -145,6 +174,62 @@ const Advisors = () => {
                         <div className="flex items-center text-primary font-medium">
                           Start Conversation
                           <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="books">
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center text-muted-foreground mb-8"
+              >
+                Explore wisdom from timeless books across philosophy, psychology, and self-development.
+              </motion.p>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {books.map((book, index) => (
+                  <motion.div
+                    key={book.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.08 }}
+                  >
+                    <Link to={`/book/${book.id}`} className="block group">
+                      <div className="glass-card rounded-2xl p-6 h-full transition-all duration-300 hover:border-primary/30 hover:shadow-glow">
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${book.color || 'from-amber-500 to-orange-700'} flex items-center justify-center text-2xl shadow-soft`}>
+                            {book.cover_emoji || '📚'}
+                          </div>
+                          <div className="flex-1">
+                            <h2 className="text-xl font-serif font-semibold group-hover:text-primary transition-colors line-clamp-1">
+                              {book.title}
+                            </h2>
+                            <p className="text-sm text-muted-foreground">{book.author}</p>
+                          </div>
+                        </div>
+                        
+                        <p className="text-secondary-foreground/80 text-sm mb-4 leading-relaxed line-clamp-2">
+                          {book.description}
+                        </p>
+
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {book.genres?.slice(0, 2).map((genre) => (
+                            <span
+                              key={genre}
+                              className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground"
+                            >
+                              {genre}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="flex items-center text-primary text-sm font-medium">
+                          Chat with Book
+                          <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </div>
                       </div>
                     </Link>
