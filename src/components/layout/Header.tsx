@@ -1,7 +1,14 @@
 import { Link } from 'react-router-dom';
-import { Brain, Menu } from 'lucide-react';
+import { Brain, Menu, LogIn, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navItems = [
   { label: 'Advisors', href: '/advisors' },
@@ -9,6 +16,8 @@ const navItems = [
 ];
 
 export const Header = () => {
+  const { user, signOut } = useAuth();
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -30,9 +39,30 @@ export const Header = () => {
               {item.label}
             </Link>
           ))}
-          <Button asChild>
-            <Link to="/advisors">Get Started</Link>
-          </Button>
+          
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <User className="w-4 h-4" />
+                  <span className="max-w-[120px] truncate">{user.email}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={signOut} className="gap-2 cursor-pointer">
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button asChild size="sm" className="gap-2">
+              <Link to="/auth">
+                <LogIn className="w-4 h-4" />
+                Sign In
+              </Link>
+            </Button>
+          )}
         </nav>
 
         {/* Mobile nav */}
@@ -53,9 +83,25 @@ export const Header = () => {
                   {item.label}
                 </Link>
               ))}
-              <Button asChild className="mt-4">
-                <Link to="/advisors">Get Started</Link>
-              </Button>
+              
+              {user ? (
+                <>
+                  <div className="text-sm text-muted-foreground truncate py-2 border-t border-border mt-2">
+                    {user.email}
+                  </div>
+                  <Button variant="outline" onClick={signOut} className="gap-2">
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <Button asChild className="mt-4 gap-2">
+                  <Link to="/auth">
+                    <LogIn className="w-4 h-4" />
+                    Sign In
+                  </Link>
+                </Button>
+              )}
             </nav>
           </SheetContent>
         </Sheet>

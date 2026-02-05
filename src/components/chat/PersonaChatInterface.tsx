@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Loader2, ArrowLeft, Sparkles } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { PersonaAdvisor } from '@/lib/persona-advisors';
 import { useToast } from '@/hooks/use-toast';
+import { MessageContent } from './MessageContent';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -37,7 +37,6 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
     scrollToBottom();
   }, [messages]);
 
-  // Fetch web context on first message
   const fetchWebContext = async () => {
     if (webContext || !persona.wikiUrl) return null;
     
@@ -79,7 +78,6 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
     setInput('');
     setIsLoading(true);
 
-    // Fetch context on first message if not already loaded
     let context = webContext;
     if (messages.length === 0 && !webContext) {
       context = await fetchWebContext();
@@ -181,7 +179,6 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-xl px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-center gap-4">
           <Button asChild variant="ghost" size="icon">
@@ -205,7 +202,6 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
         </div>
       </header>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
         <div className="max-w-3xl mx-auto space-y-6">
           {messages.length === 0 && (
@@ -251,9 +247,7 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
                   }`}
                 >
                   {message.role === 'assistant' ? (
-                    <div className="prose prose-sm prose-invert max-w-none">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
-                    </div>
+                    <MessageContent content={message.content} />
                   ) : (
                     <p className="whitespace-pre-wrap">{message.content}</p>
                   )}
@@ -278,7 +272,6 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
         </div>
       </div>
 
-      {/* Input */}
       <div className="border-t border-border bg-card/50 backdrop-blur-xl p-4">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex gap-3">
           <Textarea

@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Loader2, ArrowLeft } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Advisor } from '@/lib/advisors';
 import { useToast } from '@/hooks/use-toast';
+import { MessageContent } from './MessageContent';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -203,9 +203,7 @@ export const ChatInterface = ({ advisor }: ChatInterfaceProps) => {
                   }`}
                 >
                   {message.role === 'assistant' ? (
-                    <div className="prose prose-sm prose-invert max-w-none">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
-                    </div>
+                    <MessageContent content={message.content} />
                   ) : (
                     <p className="whitespace-pre-wrap">{message.content}</p>
                   )}
