@@ -44,6 +44,102 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_frameworks: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          example_questions: string[] | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          mental_models: string[] | null
+          name: string
+          system_prompt: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          example_questions?: string[] | null
+          icon?: string | null
+          id: string
+          is_active?: boolean | null
+          mental_models?: string[] | null
+          name: string
+          system_prompt: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          example_questions?: string[] | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          mental_models?: string[] | null
+          name?: string
+          system_prompt?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      custom_personas: {
+        Row: {
+          avatar: string | null
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          response_style: string | null
+          source_type: string | null
+          system_prompt: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          wiki_url: string | null
+        }
+        Insert: {
+          avatar?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id: string
+          is_active?: boolean | null
+          name: string
+          response_style?: string | null
+          source_type?: string | null
+          system_prompt: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          wiki_url?: string | null
+        }
+        Update: {
+          avatar?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          response_style?: string | null
+          source_type?: string | null
+          system_prompt?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          wiki_url?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -76,15 +172,75 @@ export type Database = {
           },
         ]
       }
+      user_interests: {
+        Row: {
+          advisor_id: string
+          advisor_type: string
+          created_at: string
+          id: string
+          interaction_count: number | null
+          last_interaction: string
+          topics: string[] | null
+          user_id: string
+        }
+        Insert: {
+          advisor_id: string
+          advisor_type: string
+          created_at?: string
+          id?: string
+          interaction_count?: number | null
+          last_interaction?: string
+          topics?: string[] | null
+          user_id: string
+        }
+        Update: {
+          advisor_id?: string
+          advisor_type?: string
+          created_at?: string
+          id?: string
+          interaction_count?: number | null
+          last_interaction?: string
+          topics?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -211,6 +367,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
