@@ -44,6 +44,57 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_books: {
+        Row: {
+          author: string
+          color: string | null
+          cover_emoji: string | null
+          created_at: string
+          description: string | null
+          genres: string[] | null
+          id: string
+          is_active: boolean | null
+          key_concepts: string[] | null
+          language: string | null
+          system_prompt: string
+          title: string
+          updated_at: string
+          wiki_url: string | null
+        }
+        Insert: {
+          author: string
+          color?: string | null
+          cover_emoji?: string | null
+          created_at?: string
+          description?: string | null
+          genres?: string[] | null
+          id: string
+          is_active?: boolean | null
+          key_concepts?: string[] | null
+          language?: string | null
+          system_prompt: string
+          title: string
+          updated_at?: string
+          wiki_url?: string | null
+        }
+        Update: {
+          author?: string
+          color?: string | null
+          cover_emoji?: string | null
+          created_at?: string
+          description?: string | null
+          genres?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          key_concepts?: string[] | null
+          language?: string | null
+          system_prompt?: string
+          title?: string
+          updated_at?: string
+          wiki_url?: string | null
+        }
+        Relationships: []
+      }
       custom_frameworks: {
         Row: {
           color: string | null

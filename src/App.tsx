@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import PersonaManager from "./pages/admin/PersonaManager";
 import FrameworkManager from "./pages/admin/FrameworkManager";
+import BookManager from "./pages/admin/BookManager";
 import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/personas" element={<AdminRoute><PersonaManager /></AdminRoute>} />
             <Route path="/admin/frameworks" element={<AdminRoute><FrameworkManager /></AdminRoute>} />
+            <Route path="/admin/books" element={<AdminRoute><BookManager /></AdminRoute>} />
             <Route path="/admin/analytics" element={<AdminRoute><AnalyticsDashboard /></AdminRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
