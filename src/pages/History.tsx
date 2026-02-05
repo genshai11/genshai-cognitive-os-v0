@@ -167,7 +167,7 @@ const HistoryContent = () => {
                           {format(new Date(conv.updated_at), 'MMM d, p')}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-1 italic">
+                      <p className="text-sm text-muted-foreground line-clamp-2">
                         "{conv.last_message}"
                       </p>
                     </div>
