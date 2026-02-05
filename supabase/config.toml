@@ -1,1 +1,10 @@
 project_id = "hezskqhlfpmuebckegfm"
+
+[functions.advisor-chat]
+verify_jwt = false
+
+[functions.persona-chat]
+verify_jwt = false
+
+[functions.fetch-persona-context]
+verify_jwt = false
