@@ -10,6 +10,7 @@ import Advisors from "./pages/Advisors";
 import Chat from "./pages/Chat";
 import PersonaChat from "./pages/PersonaChat";
 import Library from "./pages/Library";
+import History from "./pages/History";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/chat/:advisorId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
             <Route path="/persona/:personaId" element={<ProtectedRoute><PersonaChat /></ProtectedRoute>} />
             <Route path="/library" element={<Library />} />
+            <Route path="/history" element={<History />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Loader2, ArrowLeft } from 'lucide-react';
+import { Send, Loader2, ArrowLeft, Trash2, History as HistoryIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,17 @@ import { useToast } from '@/hooks/use-toast';
 import { useConversation } from '@/hooks/useConversation';
 import { MessageContent } from './MessageContent';
 import { useState } from 'react';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface ChatInterfaceProps {
   advisor: Advisor;
@@ -17,7 +28,7 @@ interface ChatInterfaceProps {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/advisor-chat`;
 
 export const ChatInterface = ({ advisor }: ChatInterfaceProps) => {
-  const { messages, loading: conversationLoading, addMessage, updateLastAssistantMessage, saveMessage } = useConversation({
+  const { messages, loading: conversationLoading, addMessage, updateLastAssistantMessage, saveMessage, resetConversation } = useConversation({
     advisorId: advisor.id,
     advisorType: 'framework',
   });
@@ -155,9 +166,42 @@ export const ChatInterface = ({ advisor }: ChatInterfaceProps) => {
           <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${advisor.color} flex items-center justify-center text-xl`}>
             {advisor.icon}
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="font-serif font-semibold">{advisor.name}</h1>
             <p className="text-sm text-muted-foreground">{advisor.title}</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="icon" title="History">
+              <Link to="/history">
+                <HistoryIcon className="w-5 h-5" />
+              </Link>
+            </Button>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" title="Reset Chat" disabled={messages.length === 0}>
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset Conversation?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will delete your entire chat history with {advisor.name}. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => {
+                    resetConversation();
+                    toast({ title: "Chat reset", description: "All messages have been deleted." });
+                  }}>
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </header>
