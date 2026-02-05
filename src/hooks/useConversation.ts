@@ -129,6 +129,25 @@ export const useConversation = ({ advisorId, advisorType }: UseConversationProps
     });
   }, []);
 
+  // Reset conversation
+  const resetConversation = useCallback(async () => {
+    if (!conversationId) return;
+    
+    try {
+      const { error } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', conversationId);
+
+      if (error) throw error;
+      
+      setConversationId(null);
+      setMessages([]);
+    } catch (error) {
+      console.error('Error resetting conversation:', error);
+    }
+  }, [conversationId]);
+
   return {
     messages,
     loading,
@@ -136,5 +155,6 @@ export const useConversation = ({ advisorId, advisorType }: UseConversationProps
     updateLastAssistantMessage,
     saveMessage,
     setMessages,
+    resetConversation,
   };
 };

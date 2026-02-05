@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Loader2, ArrowLeft, Sparkles } from 'lucide-react';
+import { Send, Loader2, ArrowLeft, Sparkles, Trash2, History as HistoryIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +8,17 @@ import { PersonaAdvisor } from '@/lib/persona-advisors';
 import { useToast } from '@/hooks/use-toast';
 import { useConversation } from '@/hooks/useConversation';
 import { MessageContent } from './MessageContent';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface PersonaChatInterfaceProps {
   persona: PersonaAdvisor;
@@ -17,7 +28,7 @@ const PERSONA_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pers
 const CONTEXT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-persona-context`;
 
 export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => {
-  const { messages, loading: conversationLoading, addMessage, updateLastAssistantMessage, saveMessage } = useConversation({
+  const { messages, loading: conversationLoading, addMessage, updateLastAssistantMessage, saveMessage, resetConversation } = useConversation({
     advisorId: persona.id,
     advisorType: 'persona',
   });
@@ -198,12 +209,46 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
             <h1 className="font-serif font-semibold">{persona.name}</h1>
             <p className="text-sm text-muted-foreground">{persona.title}</p>
           </div>
-          {isLoadingContext && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Sparkles className="w-3 h-3 animate-pulse" />
-              <span>Loading context...</span>
-            </div>
-          )}
+          
+          <div className="flex items-center gap-2">
+            {isLoadingContext && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mr-2">
+                <Sparkles className="w-3 h-3 animate-pulse" />
+                <span className="hidden sm:inline">Loading context...</span>
+              </div>
+            )}
+            
+            <Button asChild variant="ghost" size="icon" title="History">
+              <Link to="/history">
+                <HistoryIcon className="w-5 h-5" />
+              </Link>
+            </Button>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" title="Reset Chat" disabled={messages.length === 0}>
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset Conversation?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will delete your entire chat history with {persona.name}. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => {
+                    resetConversation();
+                    toast({ title: "Chat reset", description: "All messages have been deleted." });
+                  }}>
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       </header>
 

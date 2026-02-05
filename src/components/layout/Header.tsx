@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
-import { Brain, Menu, LogIn, LogOut, User } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Brain, Menu, LogIn, LogOut, User, History as HistoryIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,6 +17,11 @@ const navItems = [
 
 export const Header = () => {
   const { user, signOut } = useAuth();
+  const location = useLocation();
+
+  const allNavItems = user 
+    ? [...navItems, { label: 'History', href: '/history' }] 
+    : navItems;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -30,11 +35,15 @@ export const Header = () => {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-8">
-          {navItems.map((item) => (
+          {allNavItems.map((item) => (
             <Link
               key={item.href}
               to={item.href}
-              className="text-muted-foreground hover:text-foreground transition-colors font-medium"
+              className={`transition-colors font-medium ${
+                location.pathname === item.href 
+                  ? 'text-primary' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
             >
               {item.label}
             </Link>
@@ -49,7 +58,13 @@ export const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={signOut} className="gap-2 cursor-pointer">
+                <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+                  <Link to="/history">
+                    <HistoryIcon className="w-4 h-4" />
+                    History
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={signOut} className="gap-2 cursor-pointer text-destructive focus:text-destructive">
                   <LogOut className="w-4 h-4" />
                   Sign Out
                 </DropdownMenuItem>
@@ -74,11 +89,15 @@ export const Header = () => {
           </SheetTrigger>
           <SheetContent side="right" className="w-64">
             <nav className="flex flex-col gap-4 mt-8">
-              {navItems.map((item) => (
+              {allNavItems.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
-                  className="text-lg text-muted-foreground hover:text-foreground transition-colors"
+                  className={`text-lg transition-colors ${
+                    location.pathname === item.href 
+                      ? 'text-primary' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
                 >
                   {item.label}
                 </Link>
