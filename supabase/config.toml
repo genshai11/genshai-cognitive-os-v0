@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.memory-manager]
 verify_jwt = false
+
+[functions.detect-response-style]
+verify_jwt = false

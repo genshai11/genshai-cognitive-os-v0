@@ -39,7 +39,7 @@ interface BookChatInterfaceProps {
 const BOOK_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/book-chat`;
 
 export const BookChatInterface = ({ book }: BookChatInterfaceProps) => {
-  const { messages, loading: conversationLoading, addMessage, updateLastAssistantMessage, saveMessage, resetConversation, extractProfile, userId } = useConversation({
+  const { messages, loading: conversationLoading, addMessage, updateLastAssistantMessage, saveMessage, resetConversation, extractProfile, detectStyle, userId } = useConversation({
     advisorId: book.id,
     advisorType: 'book',
   });
@@ -135,8 +135,10 @@ export const BookChatInterface = ({ book }: BookChatInterfaceProps) => {
       }
 
       if (assistantContent) {
+        const allMsgs = [...messages, userMessage, { role: 'assistant' as const, content: assistantContent }];
         saveMessage({ role: 'assistant', content: assistantContent });
-        extractProfile([...messages, userMessage, { role: 'assistant', content: assistantContent }]);
+        extractProfile(allMsgs);
+        detectStyle(allMsgs);
       }
     } catch (error) {
       console.error('Chat error:', error);

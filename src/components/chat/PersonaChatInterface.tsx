@@ -22,7 +22,7 @@ const PERSONA_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pers
 const CONTEXT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-persona-context`;
 
 export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => {
-  const { messages, loading: conversationLoading, addMessage, updateLastAssistantMessage, saveMessage, resetConversation, extractProfile, userId } = useConversation({
+  const { messages, loading: conversationLoading, addMessage, updateLastAssistantMessage, saveMessage, resetConversation, extractProfile, detectStyle, userId } = useConversation({
     advisorId: persona.id,
     advisorType: 'persona',
   });
@@ -107,7 +107,12 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
           } catch { buffer = line + '\n' + buffer; break; }
         }
       }
-      if (assistantContent) { saveMessage({ role: 'assistant', content: assistantContent }); extractProfile([...messages, userMessage, { role: 'assistant', content: assistantContent }]); }
+      if (assistantContent) { 
+        const allMsgs = [...messages, userMessage, { role: 'assistant' as const, content: assistantContent }];
+        saveMessage({ role: 'assistant', content: assistantContent }); 
+        extractProfile(allMsgs); 
+        detectStyle(allMsgs);
+      }
     } catch (error) {
       console.error('Chat error:', error);
       toast({ title: 'Something went wrong', description: 'Failed to get a response. Please try again.', variant: 'destructive' });

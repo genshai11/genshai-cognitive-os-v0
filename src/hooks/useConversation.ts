@@ -13,6 +13,7 @@ interface UseConversationProps {
 }
 
 const MEMORY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/memory-manager`;
+const DETECT_STYLE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/detect-response-style`;
 
 export const useConversation = ({ advisorId, advisorType }: UseConversationProps) => {
   const { user } = useAuth();
@@ -130,6 +131,37 @@ export const useConversation = ({ advisorId, advisorType }: UseConversationProps
     }
   }, [user]);
 
+  // Detect response style every 10 messages (background, non-blocking)
+  const detectStyle = useCallback(async (allMessages: Message[]) => {
+    if (!user || allMessages.length < 10) return;
+    
+    // Only run every 10 messages
+    if (allMessages.length % 10 !== 0) return;
+
+    try {
+      fetch(DETECT_STYLE_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          messages: allMessages.slice(-20),
+        }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.updated) {
+            console.log(`Style auto-updated to: ${data.detected_style}`);
+          }
+        })
+        .catch(e => console.error('Style detection error:', e));
+    } catch (e) {
+      console.error('Style detection error:', e);
+    }
+  }, [user]);
+
   // Add message to local state
   const addMessage = useCallback((message: Message) => {
     setMessages(prev => [...prev, message]);
@@ -174,6 +206,7 @@ export const useConversation = ({ advisorId, advisorType }: UseConversationProps
     updateLastAssistantMessage,
     saveMessage,
     extractProfile,
+    detectStyle,
     setMessages,
     resetConversation,
     userId: user?.id,

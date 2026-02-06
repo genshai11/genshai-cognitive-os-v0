@@ -223,6 +223,42 @@ export type Database = {
           },
         ]
       }
+      response_style_analytics: {
+        Row: {
+          confidence_score: number
+          created_at: string
+          current_preference: string | null
+          detected_style: string
+          final_style_used: string | null
+          id: string
+          message_count: number
+          user_id: string
+          was_auto_updated: boolean | null
+        }
+        Insert: {
+          confidence_score: number
+          created_at?: string
+          current_preference?: string | null
+          detected_style: string
+          final_style_used?: string | null
+          id?: string
+          message_count: number
+          user_id: string
+          was_auto_updated?: boolean | null
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string
+          current_preference?: string | null
+          detected_style?: string
+          final_style_used?: string | null
+          id?: string
+          message_count?: number
+          user_id?: string
+          was_auto_updated?: boolean | null
+        }
+        Relationships: []
+      }
       user_interests: {
         Row: {
           advisor_id: string
@@ -258,6 +294,7 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          adaptive_style_enabled: boolean | null
           bio: string | null
           career_stage: string | null
           challenges: string[] | null
@@ -275,6 +312,7 @@ export type Database = {
           values: string[] | null
         }
         Insert: {
+          adaptive_style_enabled?: boolean | null
           bio?: string | null
           career_stage?: string | null
           challenges?: string[] | null
@@ -292,6 +330,7 @@ export type Database = {
           values?: string[] | null
         }
         Update: {
+          adaptive_style_enabled?: boolean | null
           bio?: string | null
           career_stage?: string | null
           challenges?: string[] | null
