@@ -192,7 +192,7 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-primary" />
@@ -203,7 +203,7 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="search">
+        <Tabs defaultValue="search" className="flex-1 flex flex-col overflow-hidden">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="search" className="gap-1 text-xs">
               <Search className="w-3 h-3" /> Tìm kiếm
@@ -217,7 +217,7 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
           </TabsList>
 
           {/* Search Tab */}
-          <TabsContent value="search" className="mt-4">
+          <TabsContent value="search" className="mt-4 flex-1 overflow-hidden flex flex-col">
             <div className="flex gap-2 mb-3">
               <Input
                 value={searchQuery}
@@ -229,7 +229,7 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
                 {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               </Button>
             </div>
-            <div className="space-y-2 max-h-[45vh] overflow-y-auto scrollbar-hidden pr-1">
+            <div className="space-y-2 overflow-y-auto scrollbar-hidden pr-1 flex-1">
               {searchResults.map((book, i) => (
                 <BookResultItem key={`${book.url}-${i}`} book={book} isImporting={importing === book.url} />
               ))}
@@ -237,9 +237,9 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
           </TabsContent>
 
           {/* Categories Tab */}
-          <TabsContent value="categories" className="mt-4">
+          <TabsContent value="categories" className="mt-4 flex-1 overflow-hidden flex flex-col">
             {!selectedCategory ? (
-              <div className="grid grid-cols-2 gap-2 max-h-[45vh] overflow-y-auto scrollbar-hidden pr-1">
+              <div className="grid grid-cols-2 gap-2 overflow-y-auto scrollbar-hidden pr-1 flex-1">
                 {CATEGORIES.map((cat) => (
                   <Button
                     key={cat.id}
@@ -262,7 +262,7 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
                   </span>
                   {searching && <Loader2 className="w-4 h-4 animate-spin" />}
                 </div>
-                <div className="space-y-2 max-h-[45vh] overflow-y-auto scrollbar-hidden pr-1">
+                <div className="space-y-2 overflow-y-auto scrollbar-hidden pr-1 flex-1">
                   {categoryResults.map((book, i) => (
                     <BookResultItem key={`${book.url}-${i}`} book={book} isImporting={importing === book.url} />
                   ))}
