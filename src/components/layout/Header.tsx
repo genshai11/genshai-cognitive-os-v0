@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const navItems = [
-  { label: 'Advisors', href: '/advisors' },
+  { label: 'Chat', href: '/advisors' },
   { label: 'Library', href: '/library' },
 ];
 

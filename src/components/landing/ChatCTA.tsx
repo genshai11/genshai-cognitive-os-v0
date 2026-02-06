@@ -7,19 +7,19 @@ const chatOptions = [
   {
     icon: User,
     label: 'Personas',
-    description: 'Chat với các bộ óc vĩ đại',
+    description: 'Chat with legendary thinkers',
     tab: 'personas',
   },
   {
     icon: Brain,
     label: 'Frameworks',
-    description: 'Áp dụng mental models',
+    description: 'Apply mental models',
     tab: 'frameworks',
   },
   {
     icon: BookOpen,
     label: 'Books',
-    description: 'Trò chuyện với sách',
+    description: 'Converse with timeless books',
     tab: 'books',
   },
 ];
@@ -40,13 +40,13 @@ export const ChatCTA = () => {
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
             <MessageSquare className="w-4 h-4" />
-            Bắt đầu ngay
+            Start Now
           </div>
           <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4">
-            Bạn muốn hỏi <span className="text-gradient">ai</span> hôm nay?
+            Who do you want to <span className="text-gradient">ask</span> today?
           </h2>
           <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Chọn một advisor và bắt đầu cuộc trò chuyện để nhận được góc nhìn mới cho vấn đề của bạn.
+            Pick an advisor and start a conversation to get fresh perspectives on your challenges.
           </p>
         </motion.div>
 
@@ -67,7 +67,7 @@ export const ChatCTA = () => {
                   <h3 className="text-lg font-serif font-semibold mb-1">{option.label}</h3>
                   <p className="text-sm text-muted-foreground mb-4">{option.description}</p>
                   <span className="inline-flex items-center text-primary text-sm font-medium">
-                    Bắt đầu chat
+                    Start Chat
                     <ArrowRight className="ml-1.5 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </span>
                 </div>
@@ -84,7 +84,7 @@ export const ChatCTA = () => {
         >
           <Button asChild size="lg" className="text-lg px-10 py-6 glow-ring">
             <Link to="/advisors">
-              Xem tất cả Advisors
+              View All Advisors
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
           </Button>
