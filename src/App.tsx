@@ -20,6 +20,7 @@ import PersonaManager from "./pages/admin/PersonaManager";
 import FrameworkManager from "./pages/admin/FrameworkManager";
 import BookManager from "./pages/admin/BookManager";
 import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/book/:bookId" element={<ProtectedRoute><BookChat /></ProtectedRoute>} />
             <Route path="/library" element={<Library />} />
             <Route path="/history" element={<History />} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/personas" element={<AdminRoute><PersonaManager /></AdminRoute>} />

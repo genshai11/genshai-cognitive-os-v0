@@ -7,6 +7,18 @@ const corsHeaders = {
 
 const MEM0_API_URL = "https://api.mem0.ai/v1";
 
+const STYLE_INSTRUCTIONS: Record<string, string> = {
+  concise: "RESPONSE STYLE: Be concise and direct. Keep responses under 3 sentences when possible. Use bullet points for lists. Avoid preamble or filler. Get straight to the actionable insight.",
+  balanced: "RESPONSE STYLE: Provide balanced, well-structured responses with moderate detail. Include context when helpful but stay focused. Use headers or bullet points for clarity.",
+  detailed: "RESPONSE STYLE: Provide comprehensive, detailed responses. Include step-by-step explanations, examples, and nuances. Cover edge cases and provide thorough analysis.",
+  socratic: "RESPONSE STYLE: Use the Socratic method. Instead of giving direct answers, ask thought-provoking questions that guide the user to discover insights themselves. Challenge assumptions gently.",
+  storytelling: "RESPONSE STYLE: Use storytelling and narrative techniques. Explain concepts through analogies, metaphors, and real-world examples. Paint vivid scenarios. Make abstract ideas concrete through stories.",
+};
+
+function getStyleInstruction(style: string | null | undefined): string {
+  return STYLE_INSTRUCTIONS[style || "balanced"] || STYLE_INSTRUCTIONS.balanced;
+}
+
 async function fetchMemoryContext(userId: string, query: string, mem0Key: string): Promise<string> {
   try {
     const response = await fetch(`${MEM0_API_URL}/memories/search/`, {
@@ -25,14 +37,14 @@ async function fetchMemoryContext(userId: string, query: string, mem0Key: string
   }
 }
 
-async function fetchUserProfile(userId: string, supabase: any): Promise<string> {
+async function fetchUserProfile(userId: string, supabase: any): Promise<{ context: string; style: string | null }> {
   try {
     const { data } = await supabase
       .from("user_profiles")
-      .select("display_name, goals, challenges, interests, career_stage, industry")
+      .select("display_name, goals, challenges, interests, career_stage, industry, preferred_response_style")
       .eq("user_id", userId)
       .maybeSingle();
-    if (!data) return "";
+    if (!data) return { context: "", style: null };
     const parts: string[] = [];
     if (data.display_name) parts.push(`Name: ${data.display_name}`);
     if (data.career_stage) parts.push(`Career stage: ${data.career_stage}`);
@@ -40,8 +52,8 @@ async function fetchUserProfile(userId: string, supabase: any): Promise<string> 
     if (data.goals?.length) parts.push(`Goals: ${data.goals.join(", ")}`);
     if (data.challenges?.length) parts.push(`Challenges: ${data.challenges.join(", ")}`);
     if (data.interests?.length) parts.push(`Interests: ${data.interests.join(", ")}`);
-    return parts.length > 0 ? parts.join("\n") : "";
-  } catch { return ""; }
+    return { context: parts.length > 0 ? parts.join("\n") : "", style: data.preferred_response_style };
+  } catch { return { context: "", style: null }; }
 }
 
 async function addMemories(userId: string, messages: any[], advisorId: string, advisorType: string, mem0Key: string) {
@@ -92,21 +104,29 @@ Deno.serve(async (req) => {
     let systemPrompt = framework.system_prompt;
     const MEM0_API_KEY = Deno.env.get("MEM0_API_KEY");
     const lastUserMsg = messages[messages.length - 1]?.content || "";
+    let userStyle: string | null = null;
 
-    // Inject memory context if user is authenticated
     if (userId && MEM0_API_KEY) {
-      const [memoryContext, profileContext] = await Promise.all([
+      const [memoryContext, profileResult] = await Promise.all([
         fetchMemoryContext(userId, lastUserMsg, MEM0_API_KEY),
         fetchUserProfile(userId, supabase),
       ]);
+      userStyle = profileResult.style;
 
-      if (profileContext || memoryContext) {
+      if (profileResult.context || memoryContext) {
         systemPrompt += "\n\n## CONTEXT ABOUT THIS USER (use this to personalize your response):";
-        if (profileContext) systemPrompt += `\n\n### User Profile:\n${profileContext}`;
+        if (profileResult.context) systemPrompt += `\n\n### User Profile:\n${profileResult.context}`;
         if (memoryContext) systemPrompt += `\n\n### Relevant Memories from Past Conversations:\n${memoryContext}`;
-        systemPrompt += "\n\nUse this context naturally. Don't explicitly mention that you 'remember' unless it's relevant. If the user mentions goals or challenges, acknowledge them and build on previous context.";
+        systemPrompt += "\n\nUse this context naturally. Don't explicitly mention that you 'remember' unless it's relevant.";
       }
+    } else if (userId) {
+      // Fetch style even without Mem0
+      const profile = await fetchUserProfile(userId, supabase);
+      userStyle = profile.style;
     }
+
+    // Inject response style: user preference > default
+    systemPrompt += `\n\n${getStyleInstruction(userStyle)}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -130,7 +150,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "AI gateway error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Save memories in background (non-blocking)
     if (userId && MEM0_API_KEY && messages.length >= 2) {
       addMemories(userId, messages, advisorId, "framework", MEM0_API_KEY);
     }
