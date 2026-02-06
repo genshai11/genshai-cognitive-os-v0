@@ -2,20 +2,19 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/layout/Header';
 import { Loader2, MessageSquare, Trash2, Calendar, User } from 'lucide-react';
-import { getAdvisor } from '@/lib/advisors';
-import { getPersonaAdvisor } from '@/lib/persona-advisors';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { useQuery } from '@tanstack/react-query';
 
 interface Conversation {
   id: string;
   advisor_id: string;
-  advisor_type: 'framework' | 'persona';
+  advisor_type: string;
   updated_at: string;
   last_message?: string;
 }
@@ -26,20 +25,36 @@ const HistoryContent = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Fetch all advisor names for display
+  const { data: allAdvisors = {} } = useQuery({
+    queryKey: ['all-advisor-names'],
+    queryFn: async () => {
+      const map: Record<string, { name: string; icon: string; color: string; path: string }> = {};
+      
+      const [{ data: personas }, { data: frameworks }, { data: books }] = await Promise.all([
+        supabase.from('custom_personas').select('id, name, avatar, color'),
+        supabase.from('custom_frameworks').select('id, name, icon, color'),
+        supabase.from('custom_books').select('id, title, cover_emoji, color'),
+      ]);
+
+      personas?.forEach(p => { map[p.id] = { name: p.name, icon: p.avatar || '🧠', color: p.color || 'from-purple-500 to-indigo-700', path: `/persona/${p.id}` }; });
+      frameworks?.forEach(f => { map[f.id] = { name: f.name, icon: f.icon || '🎯', color: f.color || 'from-blue-500 to-cyan-700', path: `/chat/${f.id}` }; });
+      books?.forEach(b => { map[b.id] = { name: b.title, icon: b.cover_emoji || '📚', color: b.color || 'from-amber-500 to-orange-700', path: `/book/${b.id}` }; });
+
+      return map;
+    },
+  });
+
   const fetchConversations = async () => {
     if (!user) return;
-    
     try {
-      // First get conversations
       const { data: convs, error } = await supabase
         .from('conversations')
         .select('*')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false });
-
       if (error) throw error;
 
-      // Then for each conversation, get the latest message content
       const enrichedConvs = await Promise.all((convs || []).map(async (conv) => {
         const { data: lastMsg } = await supabase
           .from('messages')
@@ -48,74 +63,39 @@ const HistoryContent = () => {
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
-        
-        return {
-          ...conv,
-          last_message: lastMsg?.content || 'No messages yet'
-        };
+        return { ...conv, last_message: lastMsg?.content || 'No messages yet' };
       }));
 
       setConversations(enrichedConvs as Conversation[]);
     } catch (error) {
       console.error('Error fetching history:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load chat history",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to load chat history", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchConversations();
-  }, [user]);
+  useEffect(() => { fetchConversations(); }, [user]);
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigation
+    e.preventDefault();
     e.stopPropagation();
-
     try {
-      const { error } = await supabase
-        .from('conversations')
-        .delete()
-        .eq('id', id);
-
+      const { error } = await supabase.from('conversations').delete().eq('id', id);
       if (error) throw error;
-
       setConversations(prev => prev.filter(c => c.id !== id));
-      toast({
-        title: "Success",
-        description: "Conversation deleted",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete conversation",
-        variant: "destructive"
-      });
+      toast({ title: "Success", description: "Conversation deleted" });
+    } catch {
+      toast({ title: "Error", description: "Failed to delete conversation", variant: "destructive" });
     }
   };
 
-  const getAdvisorDetails = (id: string, type: 'framework' | 'persona') => {
-    if (type === 'persona') {
-      const persona = getPersonaAdvisor(id);
-      return {
-        name: persona?.name || 'Unknown Persona',
-        icon: persona?.avatar || <User className="w-5 h-5" />,
-        color: persona?.color || 'from-gray-500 to-gray-700',
-        path: `/persona/${id}`
-      };
-    } else {
-      const advisor = getAdvisor(id);
-      return {
-        name: advisor?.name || 'Unknown Framework',
-        icon: advisor?.icon || <MessageSquare className="w-5 h-5" />,
-        color: advisor?.color || 'from-blue-500 to-indigo-700',
-        path: `/chat/${id}`
-      };
-    }
+  const getAdvisorDetails = (id: string, type: string) => {
+    const found = allAdvisors[id];
+    if (found) return found;
+    // Fallback for unknown advisors
+    const path = type === 'persona' ? `/persona/${id}` : type === 'book' ? `/book/${id}` : `/chat/${id}`;
+    return { name: id, icon: '💬', color: 'from-gray-500 to-gray-700', path };
   };
 
   if (loading) {
@@ -133,9 +113,7 @@ const HistoryContent = () => {
           <h1 className="text-3xl font-serif font-bold mb-2 tracking-tight">Chat History</h1>
           <p className="text-muted-foreground">Continue your previous discussions with advisors.</p>
         </div>
-        <Button asChild variant="outline">
-          <Link to="/advisors">New Chat</Link>
-        </Button>
+        <Button asChild variant="outline"><Link to="/advisors">New Chat</Link></Button>
       </div>
 
       {conversations.length === 0 ? (
@@ -143,9 +121,7 @@ const HistoryContent = () => {
           <CardContent>
             <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-20" />
             <p className="text-muted-foreground mb-6">You haven't started any conversations yet.</p>
-            <Button asChild>
-              <Link to="/advisors">Explore Advisors</Link>
-            </Button>
+            <Button asChild><Link to="/advisors">Explore Advisors</Link></Button>
           </CardContent>
         </Card>
       ) : (
@@ -167,16 +143,9 @@ const HistoryContent = () => {
                           {format(new Date(conv.updated_at), 'MMM d, p')}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        "{conv.last_message}"
-                      </p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">"{conv.last_message}"</p>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="ml-2 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => handleDelete(conv.id, e)}
-                    >
+                    <Button variant="ghost" size="icon" className="ml-2 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => handleDelete(conv.id, e)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
