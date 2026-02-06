@@ -8,8 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Pencil, Trash2, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Save, Sparkles, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useGenerateAdvisor } from '@/hooks/useGenerateAdvisor';
 
 interface Framework {
   id: string;
@@ -44,6 +45,28 @@ const FrameworkManager = () => {
   const [formData, setFormData] = useState<Omit<Framework, 'id'>>(emptyFramework);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { generate, generating } = useGenerateAdvisor();
+
+  const handleAutoGenerate = async () => {
+    if (!formData.name.trim()) {
+      toast({ title: 'Enter a name first', description: 'Type a framework name then click Auto Generate', variant: 'destructive' });
+      return;
+    }
+    const result = await generate('framework', { name: formData.name });
+    if (result) {
+      setFormData({
+        ...formData,
+        name: result.name || formData.name,
+        title: result.title || formData.title,
+        description: result.description || formData.description,
+        icon: result.icon || formData.icon,
+        color: result.color || formData.color,
+        system_prompt: result.system_prompt || formData.system_prompt,
+        mental_models: result.mental_models || formData.mental_models,
+        example_questions: result.example_questions || formData.example_questions,
+      });
+    }
+  };
 
   const fetchFrameworks = async () => {
     try {
@@ -235,12 +258,17 @@ const FrameworkManager = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g., First Principles"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="e.g., First Principles"
+                    />
+                    <Button type="button" variant="secondary" size="sm" onClick={handleAutoGenerate} disabled={generating} className="shrink-0">
+                      {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="title">Title</Label>
