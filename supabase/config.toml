@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.book-chat]
 verify_jwt = false
+
+[functions.generate-advisor]
+verify_jwt = false

@@ -9,8 +9,9 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Pencil, Trash2, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Sparkles, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useGenerateAdvisor } from '@/hooks/useGenerateAdvisor';
 
 interface Persona {
   id: string;
@@ -49,6 +50,30 @@ const PersonaManager = () => {
   const [formData, setFormData] = useState<Omit<Persona, 'id'>>(emptyPersona);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { generate, generating } = useGenerateAdvisor();
+
+  const handleAutoGenerate = async () => {
+    if (!formData.name.trim()) {
+      toast({ title: 'Enter a name first', description: 'Type a persona name then click Auto Generate', variant: 'destructive' });
+      return;
+    }
+    const result = await generate('persona', { name: formData.name });
+    if (result) {
+      setFormData({
+        ...formData,
+        name: result.name || formData.name,
+        title: result.title || formData.title,
+        description: result.description || formData.description,
+        avatar: result.avatar || formData.avatar,
+        color: result.color || formData.color,
+        system_prompt: result.system_prompt || formData.system_prompt,
+        response_style: result.response_style || formData.response_style,
+        tags: result.tags || formData.tags,
+        wiki_url: result.wiki_url || formData.wiki_url,
+        source_type: result.source_type || formData.source_type,
+      });
+    }
+  };
 
   const fetchPersonas = async () => {
     try {
@@ -244,12 +269,17 @@ const PersonaManager = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g., Steve Jobs"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="e.g., Steve Jobs"
+                    />
+                    <Button type="button" variant="secondary" size="sm" onClick={handleAutoGenerate} disabled={generating} className="shrink-0">
+                      {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="title">Title</Label>
