@@ -229,7 +229,7 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
                 {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               </Button>
             </div>
-            <ScrollArea className="flex-1 max-h-[40vh]">
+            <ScrollArea className="flex-1 h-[40vh]">
               <div className="space-y-2 pr-3">
                 {searchResults.map((book, i) => (
                   <BookResultItem key={`${book.url}-${i}`} book={book} isImporting={importing === book.url} />
