@@ -22,7 +22,7 @@ interface ChatInterfaceProps {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/advisor-chat`;
 
 export const ChatInterface = ({ advisor }: ChatInterfaceProps) => {
-  const { messages, loading: conversationLoading, addMessage, updateLastAssistantMessage, saveMessage, resetConversation } = useConversation({
+  const { messages, loading: conversationLoading, addMessage, updateLastAssistantMessage, saveMessage, resetConversation, extractProfile, userId } = useConversation({
     advisorId: advisor.id,
     advisorType: 'framework',
   });
@@ -49,7 +49,7 @@ export const ChatInterface = ({ advisor }: ChatInterfaceProps) => {
       const response = await fetch(CHAT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-        body: JSON.stringify({ messages: [...messages, userMessage], advisorId: advisor.id }),
+        body: JSON.stringify({ messages: [...messages, userMessage], advisorId: advisor.id, userId }),
       });
 
       if (!response.ok) {
@@ -83,7 +83,7 @@ export const ChatInterface = ({ advisor }: ChatInterfaceProps) => {
           } catch { buffer = line + '\n' + buffer; break; }
         }
       }
-      if (assistantContent) { saveMessage({ role: 'assistant', content: assistantContent }); }
+      if (assistantContent) { saveMessage({ role: 'assistant', content: assistantContent }); extractProfile([...messages, userMessage, { role: 'assistant', content: assistantContent }]); }
     } catch (error) {
       console.error('Chat error:', error);
       toast({ title: 'Something went wrong', description: 'Failed to get a response. Please try again.', variant: 'destructive' });

@@ -22,7 +22,7 @@ const PERSONA_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pers
 const CONTEXT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-persona-context`;
 
 export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => {
-  const { messages, loading: conversationLoading, addMessage, updateLastAssistantMessage, saveMessage, resetConversation } = useConversation({
+  const { messages, loading: conversationLoading, addMessage, updateLastAssistantMessage, saveMessage, resetConversation, extractProfile, userId } = useConversation({
     advisorId: persona.id,
     advisorType: 'persona',
   });
@@ -73,7 +73,7 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
       const response = await fetch(PERSONA_CHAT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-        body: JSON.stringify({ messages: [...messages, userMessage], personaId: persona.id, additionalContext: context }),
+        body: JSON.stringify({ messages: [...messages, userMessage], personaId: persona.id, additionalContext: context, userId }),
       });
 
       if (!response.ok) {
@@ -107,7 +107,7 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
           } catch { buffer = line + '\n' + buffer; break; }
         }
       }
-      if (assistantContent) { saveMessage({ role: 'assistant', content: assistantContent }); }
+      if (assistantContent) { saveMessage({ role: 'assistant', content: assistantContent }); extractProfile([...messages, userMessage, { role: 'assistant', content: assistantContent }]); }
     } catch (error) {
       console.error('Chat error:', error);
       toast({ title: 'Something went wrong', description: 'Failed to get a response. Please try again.', variant: 'destructive' });

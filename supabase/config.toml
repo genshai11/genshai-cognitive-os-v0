@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.goodreads-import]
 verify_jwt = false
+
+[functions.memory-manager]
+verify_jwt = false

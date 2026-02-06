@@ -5,9 +5,64 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const MEM0_API_URL = "https://api.mem0.ai/v1";
+
 interface Message {
   role: "user" | "assistant" | "system";
   content: string;
+}
+
+async function fetchMemoryContext(userId: string, query: string, mem0Key: string): Promise<string> {
+  try {
+    const response = await fetch(`${MEM0_API_URL}/memories/search/`, {
+      method: "POST",
+      headers: { "Authorization": `Token ${mem0Key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ query, user_id: userId, limit: 10 }),
+    });
+    if (!response.ok) return "";
+    const data = await response.json();
+    const memories = data.results || data || [];
+    if (memories.length === 0) return "";
+    return memories.map((m: any) => `- ${m.memory}`).join("\n");
+  } catch (e) {
+    console.error("Memory fetch error:", e);
+    return "";
+  }
+}
+
+async function fetchUserProfile(userId: string, supabase: any): Promise<string> {
+  try {
+    const { data } = await supabase
+      .from("user_profiles")
+      .select("display_name, goals, challenges, interests, career_stage, industry")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!data) return "";
+    const parts: string[] = [];
+    if (data.display_name) parts.push(`Name: ${data.display_name}`);
+    if (data.career_stage) parts.push(`Career stage: ${data.career_stage}`);
+    if (data.industry) parts.push(`Industry: ${data.industry}`);
+    if (data.goals?.length) parts.push(`Goals: ${data.goals.join(", ")}`);
+    if (data.challenges?.length) parts.push(`Challenges: ${data.challenges.join(", ")}`);
+    if (data.interests?.length) parts.push(`Interests: ${data.interests.join(", ")}`);
+    return parts.length > 0 ? parts.join("\n") : "";
+  } catch { return ""; }
+}
+
+async function addMemories(userId: string, messages: any[], advisorId: string, advisorType: string, mem0Key: string) {
+  try {
+    await fetch(`${MEM0_API_URL}/memories/`, {
+      method: "POST",
+      headers: { "Authorization": `Token ${mem0Key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: messages.slice(-4),
+        user_id: userId,
+        metadata: { advisor_id: advisorId, advisor_type: advisorType },
+      }),
+    });
+  } catch (e) {
+    console.error("Memory add error:", e);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -16,7 +71,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { messages, bookId } = await req.json();
+    const { messages, bookId, userId } = await req.json();
 
     if (!messages || !bookId) {
       return new Response(
@@ -25,7 +80,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch book from database
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -43,7 +97,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    const systemPrompt = book.system_prompt;
+    let systemPrompt = book.system_prompt;
+    const MEM0_API_KEY = Deno.env.get("MEM0_API_KEY");
+    const lastUserMsg = messages[messages.length - 1]?.content || "";
+
+    // Inject memory context
+    if (userId && MEM0_API_KEY) {
+      const [memoryContext, profileContext] = await Promise.all([
+        fetchMemoryContext(userId, lastUserMsg, MEM0_API_KEY),
+        fetchUserProfile(userId, supabase),
+      ]);
+
+      if (profileContext || memoryContext) {
+        systemPrompt += "\n\n## CONTEXT ABOUT THE READER (use this to personalize your explanations):";
+        if (profileContext) systemPrompt += `\n\n### Reader Profile:\n${profileContext}`;
+        if (memoryContext) systemPrompt += `\n\n### Relevant Memories from Past Conversations:\n${memoryContext}`;
+        systemPrompt += "\n\nUse this context to make the book's concepts more relevant to the reader's situation. Connect ideas to their goals and challenges when possible.";
+      }
+    }
 
     const apiMessages: Message[] = [
       { role: "system", content: systemPrompt },
@@ -82,6 +153,11 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "Failed to get AI response" }),
         { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Save memories in background
+    if (userId && MEM0_API_KEY && messages.length >= 2) {
+      addMemories(userId, messages, bookId, "book", MEM0_API_KEY);
     }
 
     return new Response(response.body, {
