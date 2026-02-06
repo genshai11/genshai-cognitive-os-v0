@@ -8,6 +8,7 @@ import { PersonaAdvisor } from '@/lib/persona-advisors';
 import { useToast } from '@/hooks/use-toast';
 import { useConversation } from '@/hooks/useConversation';
 import { MessageContent } from './MessageContent';
+import { AdvisorSwitcher } from './AdvisorSwitcher';
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -217,6 +218,8 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
                 <span className="hidden sm:inline">Loading context...</span>
               </div>
             )}
+
+            <AdvisorSwitcher currentId={persona.id} currentType="persona" />
             
             <Button asChild variant="ghost" size="icon" title="History">
               <Link to="/history">

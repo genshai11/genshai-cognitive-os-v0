@@ -8,6 +8,7 @@ import { Advisor } from '@/lib/advisors';
 import { useToast } from '@/hooks/use-toast';
 import { useConversation } from '@/hooks/useConversation';
 import { MessageContent } from './MessageContent';
+import { AdvisorSwitcher } from './AdvisorSwitcher';
 import { useState } from 'react';
 import { 
   AlertDialog,
@@ -172,6 +173,8 @@ export const ChatInterface = ({ advisor }: ChatInterfaceProps) => {
           </div>
 
           <div className="flex items-center gap-2">
+            <AdvisorSwitcher currentId={advisor.id} currentType="framework" />
+
             <Button asChild variant="ghost" size="icon" title="History">
               <Link to="/history">
                 <HistoryIcon className="w-5 h-5" />
