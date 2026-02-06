@@ -1,53 +1,22 @@
 import { motion } from 'framer-motion';
 import { Header } from '@/components/layout/Header';
-import { BookOpen, Lightbulb, Target, TrendingUp, Shield, Compass, Brain } from 'lucide-react';
-
-const mentalModels = [
-  {
-    name: 'Inversion',
-    category: 'Decision-Making',
-    icon: Target,
-    description: 'Instead of asking "How do I achieve X?", ask "What would guarantee I fail at X?" By identifying what to avoid, you systematically reduce costly mistakes.',
-    attribution: 'Charlie Munger',
-  },
-  {
-    name: 'First Principles Thinking',
-    category: 'Problem-Solving',
-    icon: Brain,
-    description: 'Break down complex problems into their fundamental truths, then reason up from there. Don\'t rely on analogies or conventions.',
-    attribution: 'Elon Musk / Aristotle',
-  },
-  {
-    name: 'Circle of Competence',
-    category: 'Self-Awareness',
-    icon: Compass,
-    description: 'Know the boundaries of your expertise. The size of your circle matters less than knowing where it ends.',
-    attribution: 'Warren Buffett',
-  },
-  {
-    name: 'Second-Order Thinking',
-    category: 'Decision-Making',
-    icon: TrendingUp,
-    description: 'Don\'t just think about the immediate consequences. Ask "And then what?" to anticipate downstream effects.',
-    attribution: 'Howard Marks',
-  },
-  {
-    name: 'Margin of Safety',
-    category: 'Risk Management',
-    icon: Shield,
-    description: 'Build buffers into your plans. The difference between what you can handle and what you actually face is your margin of safety.',
-    attribution: 'Benjamin Graham',
-  },
-  {
-    name: 'Dichotomy of Control',
-    category: 'Philosophy',
-    icon: Lightbulb,
-    description: 'Focus only on what you can control. External events are not up to you, but your response to them is.',
-    attribution: 'Epictetus',
-  },
-];
+import { BookOpen, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const Library = () => {
+  const { data: frameworks = [], isLoading } = useQuery({
+    queryKey: ['library-frameworks'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('custom_frameworks')
+        .select('id, name, title, description, icon, color, mental_models')
+        .eq('is_active', true);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -72,45 +41,57 @@ const Library = () => {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mentalModels.map((model, index) => (
-              <motion.div
-                key={model.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="glass-card rounded-2xl p-6 hover:border-primary/30 transition-colors"
-              >
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <model.icon className="w-6 h-6 text-primary" />
+          {isLoading ? (
+            <div className="flex justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : frameworks.length === 0 ? (
+            <div className="text-center py-20 text-muted-foreground">
+              <p className="text-lg">Chưa có framework nào. Hãy thêm từ trang admin.</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {frameworks.map((fw, index) => (
+                <motion.div
+                  key={fw.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.08 }}
+                  className="glass-card rounded-2xl p-6 hover:border-primary/30 transition-colors"
+                >
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${fw.color || 'from-blue-500 to-cyan-700'} flex items-center justify-center text-2xl shadow-soft`}>
+                      {fw.icon || '🎯'}
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground">{fw.title}</span>
+                      <h3 className="text-lg font-serif font-semibold">{fw.name}</h3>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-xs text-muted-foreground">{model.category}</span>
-                    <h3 className="text-lg font-serif font-semibold">{model.name}</h3>
-                  </div>
-                </div>
-                <p className="text-secondary-foreground/80 text-sm leading-relaxed mb-4">
-                  {model.description}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  — {model.attribution}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="text-center mt-16 p-8 glass-card rounded-2xl"
-          >
-            <h3 className="text-2xl font-serif font-bold mb-2">More Models Coming Soon</h3>
-            <p className="text-muted-foreground">
-              We're continuously adding new mental models. Chat with an advisor to learn how to apply these frameworks.
-            </p>
-          </motion.div>
+                  <p className="text-secondary-foreground/80 text-sm leading-relaxed mb-4">
+                    {fw.description}
+                  </p>
+                  {fw.mental_models && fw.mental_models.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {fw.mental_models.slice(0, 4).map((model) => (
+                        <span
+                          key={model}
+                          className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground"
+                        >
+                          {model}
+                        </span>
+                      ))}
+                      {fw.mental_models.length > 4 && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                          +{fw.mental_models.length - 4}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

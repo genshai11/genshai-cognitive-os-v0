@@ -2,6 +2,7 @@ import { Header } from '@/components/layout/Header';
 import { Hero } from '@/components/landing/Hero';
 import { AdvisorShowcase } from '@/components/landing/AdvisorShowcase';
 import { ValueProps } from '@/components/landing/ValueProps';
+import { ChatCTA } from '@/components/landing/ChatCTA';
 
 const Index = () => {
   return (
@@ -10,6 +11,7 @@ const Index = () => {
       <main className="pt-16">
         <Hero />
         <AdvisorShowcase />
+        <ChatCTA />
         <ValueProps />
       </main>
       
