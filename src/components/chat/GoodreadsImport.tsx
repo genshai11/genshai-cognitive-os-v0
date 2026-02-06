@@ -229,7 +229,7 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
                 {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               </Button>
             </div>
-            <div className="space-y-2 max-h-[45vh] overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-[45vh] overflow-y-auto scrollbar-hidden pr-1">
               {searchResults.map((book, i) => (
                 <BookResultItem key={`${book.url}-${i}`} book={book} isImporting={importing === book.url} />
               ))}
@@ -239,7 +239,7 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
           {/* Categories Tab */}
           <TabsContent value="categories" className="mt-4">
             {!selectedCategory ? (
-              <div className="grid grid-cols-2 gap-2 max-h-[45vh] overflow-y-auto pr-1">
+              <div className="grid grid-cols-2 gap-2 max-h-[45vh] overflow-y-auto scrollbar-hidden pr-1">
                 {CATEGORIES.map((cat) => (
                   <Button
                     key={cat.id}
@@ -262,7 +262,7 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
                   </span>
                   {searching && <Loader2 className="w-4 h-4 animate-spin" />}
                 </div>
-                <div className="space-y-2 max-h-[45vh] overflow-y-auto pr-1">
+                <div className="space-y-2 max-h-[45vh] overflow-y-auto scrollbar-hidden pr-1">
                   {categoryResults.map((book, i) => (
                     <BookResultItem key={`${book.url}-${i}`} book={book} isImporting={importing === book.url} />
                   ))}
