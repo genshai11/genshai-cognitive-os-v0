@@ -300,10 +300,13 @@ export type Database = {
           challenges: string[] | null
           created_at: string
           display_name: string | null
+          emoji_usage: string | null
+          formality_level: string | null
           goals: string[] | null
           id: string
           industry: string | null
           interests: string[] | null
+          language_complexity: string | null
           learning_style: string | null
           onboarding_completed: boolean | null
           preferred_response_style: string | null
@@ -318,10 +321,13 @@ export type Database = {
           challenges?: string[] | null
           created_at?: string
           display_name?: string | null
+          emoji_usage?: string | null
+          formality_level?: string | null
           goals?: string[] | null
           id?: string
           industry?: string | null
           interests?: string[] | null
+          language_complexity?: string | null
           learning_style?: string | null
           onboarding_completed?: boolean | null
           preferred_response_style?: string | null
@@ -336,10 +342,13 @@ export type Database = {
           challenges?: string[] | null
           created_at?: string
           display_name?: string | null
+          emoji_usage?: string | null
+          formality_level?: string | null
           goals?: string[] | null
           id?: string
           industry?: string | null
           interests?: string[] | null
+          language_complexity?: string | null
           learning_style?: string | null
           onboarding_completed?: boolean | null
           preferred_response_style?: string | null
