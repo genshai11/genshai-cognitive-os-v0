@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.generate-advisor]
 verify_jwt = false
+
+[functions.goodreads-import]
+verify_jwt = false

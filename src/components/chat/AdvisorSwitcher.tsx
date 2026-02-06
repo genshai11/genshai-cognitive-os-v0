@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeftRight, Plus, Sparkles, Loader2, User, Brain, BookOpen } from 'lucide-react';
+import { ArrowLeftRight, Plus, Sparkles, Loader2, User, Brain, BookOpen, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -27,6 +27,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useGenerateAdvisor } from '@/hooks/useGenerateAdvisor';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
+import { GoodreadsImport } from './GoodreadsImport';
 
 interface AdvisorSwitcherProps {
   currentId: string;
@@ -36,6 +37,7 @@ interface AdvisorSwitcherProps {
 export const AdvisorSwitcher = ({ currentId, currentType }: AdvisorSwitcherProps) => {
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
+  const [goodreadsOpen, setGoodreadsOpen] = useState(false);
   const [createType, setCreateType] = useState<'persona' | 'book' | 'framework'>('persona');
   const [createName, setCreateName] = useState('');
   const { generate, generating } = useGenerateAdvisor();
@@ -241,6 +243,10 @@ export const AdvisorSwitcher = ({ currentId, currentType }: AdvisorSwitcherProps
             <Plus className="w-4 h-4" />
             <span>Tạo mới với AI ✨</span>
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setGoodreadsOpen(true)} className="gap-2 text-primary">
+            <Globe className="w-4 h-4" />
+            <span>Import từ Goodreads 📚</span>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -304,6 +310,9 @@ export const AdvisorSwitcher = ({ currentId, currentType }: AdvisorSwitcherProps
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Goodreads Import */}
+      <GoodreadsImport open={goodreadsOpen} onOpenChange={setGoodreadsOpen} />
     </>
   );
 };
