@@ -192,7 +192,7 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-primary" />
@@ -203,7 +203,7 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="search" className="flex-1 flex flex-col min-h-0">
+        <Tabs defaultValue="search" className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="search" className="gap-1 text-xs">
               <Search className="w-3 h-3" /> Tìm kiếm
