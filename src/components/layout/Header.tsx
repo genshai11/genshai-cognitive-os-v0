@@ -67,6 +67,12 @@ export const Header = () => {
                     History
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+                  <Link to="/settings">
+                    <Settings className="w-4 h-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
                 {isAdmin && (
                   <>
                     <DropdownMenuSeparator />
