@@ -12,6 +12,8 @@ interface UseConversationProps {
   advisorType: 'framework' | 'persona' | 'book';
 }
 
+const MEMORY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/memory-manager`;
+
 export const useConversation = ({ advisorId, advisorType }: UseConversationProps) => {
   const { user } = useAuth();
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -27,7 +29,6 @@ export const useConversation = ({ advisorId, advisorType }: UseConversationProps
 
     const loadConversation = async () => {
       try {
-        // Find existing conversation
         const { data: existing, error: findError } = await supabase
           .from('conversations')
           .select('id')
@@ -43,7 +44,6 @@ export const useConversation = ({ advisorId, advisorType }: UseConversationProps
         if (existing) {
           setConversationId(existing.id);
           
-          // Load messages
           const { data: msgs, error: msgError } = await supabase
             .from('messages')
             .select('role, content')
@@ -66,17 +66,12 @@ export const useConversation = ({ advisorId, advisorType }: UseConversationProps
   // Create conversation if needed
   const ensureConversation = useCallback(async (): Promise<string | null> => {
     if (!user) return null;
-    
     if (conversationId) return conversationId;
 
     try {
       const { data, error } = await supabase
         .from('conversations')
-        .insert({
-          user_id: user.id,
-          advisor_id: advisorId,
-          advisor_type: advisorType,
-        })
+        .insert({ user_id: user.id, advisor_id: advisorId, advisor_type: advisorType })
         .select('id')
         .single();
 
@@ -101,7 +96,6 @@ export const useConversation = ({ advisorId, advisorType }: UseConversationProps
         content: message.content,
       });
 
-      // Update conversation timestamp
       await supabase
         .from('conversations')
         .update({ updated_at: new Date().toISOString() })
@@ -111,7 +105,32 @@ export const useConversation = ({ advisorId, advisorType }: UseConversationProps
     }
   }, [ensureConversation]);
 
-  // Add message to local state and save
+  // Extract profile from conversation (background, after assistant responds)
+  const extractProfile = useCallback(async (allMessages: Message[]) => {
+    if (!user || allMessages.length < 2) return;
+    
+    try {
+      // Only extract every 5 messages to avoid excessive calls
+      if (allMessages.length % 5 !== 0) return;
+
+      fetch(MEMORY_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          action: 'extract_profile',
+          userId: user.id,
+          messages: allMessages.slice(-6),
+        }),
+      }).catch(e => console.error('Profile extraction error:', e));
+    } catch (e) {
+      console.error('Profile extraction error:', e);
+    }
+  }, [user]);
+
+  // Add message to local state
   const addMessage = useCallback((message: Message) => {
     setMessages(prev => [...prev, message]);
   }, []);
@@ -154,7 +173,9 @@ export const useConversation = ({ advisorId, advisorType }: UseConversationProps
     addMessage,
     updateLastAssistantMessage,
     saveMessage,
+    extractProfile,
     setMessages,
     resetConversation,
+    userId: user?.id,
   };
 };
