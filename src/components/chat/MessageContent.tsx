@@ -175,24 +175,24 @@ export const MessageContent = ({ content }: MessageContentProps) => {
           return (
             <div
               key={`md-${i}`}
-              className="prose prose-sm prose-invert max-w-none 
-                prose-headings:font-serif prose-headings:text-foreground
-                prose-h1:text-xl prose-h1:font-bold prose-h1:mb-3 prose-h1:mt-5 prose-h1:flex prose-h1:items-center prose-h1:gap-2
-                prose-h2:text-lg prose-h2:font-semibold prose-h2:mb-2 prose-h2:mt-4 prose-h2:flex prose-h2:items-center prose-h2:gap-2
-                prose-h3:text-base prose-h3:font-medium prose-h3:mb-2 prose-h3:mt-3
-                prose-p:text-secondary-foreground prose-p:leading-relaxed prose-p:mb-2.5
+              className="prose prose-sm prose-invert max-w-none
+                prose-headings:font-serif prose-headings:text-foreground prose-headings:tracking-tight
+                prose-h1:text-xl prose-h1:font-bold prose-h1:mb-4 prose-h1:mt-6 prose-h1:flex prose-h1:items-center prose-h1:gap-2
+                prose-h2:text-lg prose-h2:font-semibold prose-h2:mb-3 prose-h2:mt-5 prose-h2:flex prose-h2:items-center prose-h2:gap-2 prose-h2:text-primary
+                prose-h3:text-base prose-h3:font-medium prose-h3:mb-2 prose-h3:mt-4 prose-h3:text-foreground/90
+                prose-p:text-secondary-foreground prose-p:leading-[1.8] prose-p:mb-3
                 prose-strong:text-foreground prose-strong:font-semibold
-                prose-em:text-primary/90
-                prose-ul:my-2 prose-ul:pl-4
-                prose-ol:my-2 prose-ol:pl-4
-                prose-li:text-secondary-foreground prose-li:mb-0.5
+                prose-em:text-primary/80 prose-em:font-medium
+                prose-ul:my-3 prose-ul:pl-1 prose-ul:space-y-1.5
+                prose-ol:my-3 prose-ol:pl-1 prose-ol:space-y-1.5
+                prose-li:text-secondary-foreground prose-li:leading-relaxed
                 prose-blockquote:border-l-2 prose-blockquote:border-l-primary/50 prose-blockquote:bg-secondary/20
                 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg
-                prose-blockquote:text-muted-foreground prose-blockquote:italic prose-blockquote:my-3
-                prose-a:text-primary prose-a:underline prose-a:underline-offset-2
-                prose-hr:border-border prose-hr:my-4
+                prose-blockquote:text-muted-foreground prose-blockquote:italic prose-blockquote:my-4
+                prose-a:text-primary prose-a:underline prose-a:underline-offset-2 prose-a:decoration-primary/30
+                prose-hr:border-border prose-hr:my-5
                 prose-table:border-collapse prose-table:w-full
-                prose-th:border prose-th:border-border prose-th:bg-secondary/50 prose-th:px-3 prose-th:py-2 prose-th:text-left
+                prose-th:border prose-th:border-border prose-th:bg-secondary/50 prose-th:px-3 prose-th:py-2 prose-th:text-left prose-th:font-semibold
                 prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2
               "
             >
