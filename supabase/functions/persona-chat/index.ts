@@ -8,15 +8,48 @@ const corsHeaders = {
 const MEM0_API_URL = "https://api.mem0.ai/v1";
 
 const STYLE_INSTRUCTIONS: Record<string, string> = {
-  concise: "RESPONSE STYLE: Be concise and direct. Keep responses under 3 sentences when possible. Use bullet points for lists. Avoid preamble or filler. Get straight to the actionable insight.",
-  balanced: "RESPONSE STYLE: Provide balanced, well-structured responses with moderate detail. Include context when helpful but stay focused. Use headers or bullet points for clarity.",
-  detailed: "RESPONSE STYLE: Provide comprehensive, detailed responses. Include step-by-step explanations, examples, and nuances. Cover edge cases and provide thorough analysis.",
-  socratic: "RESPONSE STYLE: Use the Socratic method. Instead of giving direct answers, ask thought-provoking questions that guide the user to discover insights themselves. Challenge assumptions gently.",
-  storytelling: "RESPONSE STYLE: Use storytelling and narrative techniques. Explain concepts through analogies, metaphors, and real-world examples. Paint vivid scenarios. Make abstract ideas concrete through stories.",
+  concise: "RESPONSE STYLE: Be concise and direct. Keep responses under 3 sentences when possible. Use bullet points for lists. Avoid preamble or filler.",
+  balanced: "RESPONSE STYLE: Provide balanced, well-structured responses with moderate detail. Include context when helpful but stay focused.",
+  detailed: "RESPONSE STYLE: Provide comprehensive, detailed responses. Include step-by-step explanations, examples, and nuances.",
+  socratic: "RESPONSE STYLE: Use the Socratic method. Ask thought-provoking questions that guide the user to discover insights themselves.",
+  storytelling: "RESPONSE STYLE: Use storytelling and narrative techniques. Explain concepts through analogies, metaphors, and real-world examples.",
 };
 
-function getStyleInstruction(style: string | null | undefined): string {
-  return STYLE_INSTRUCTIONS[style || "balanced"] || STYLE_INSTRUCTIONS.balanced;
+const FORMALITY_INSTRUCTIONS: Record<string, string> = {
+  very_casual: "TONE: Very casual, like texting a friend. Use contractions, slang is OK.",
+  casual: "TONE: Casual and friendly but clear. Conversational.",
+  professional: "TONE: Professional and balanced. Clear and respectful.",
+  formal: "TONE: Formal and business-like. Polished language.",
+};
+
+const COMPLEXITY_INSTRUCTIONS: Record<string, string> = {
+  simple: "COMPLEXITY: Use simple language. Explain like I'm 5. Avoid jargon.",
+  moderate: "COMPLEXITY: Use standard language. Some technical terms with brief explanations.",
+  advanced: "COMPLEXITY: Technical terms are fine. Assume familiarity with concepts.",
+};
+
+const EMOJI_INSTRUCTIONS: Record<string, string> = {
+  none: "EMOJI: Do not use any emoji in responses.",
+  minimal: "EMOJI: Use emoji very sparingly, only for occasional emphasis.",
+  moderate: "EMOJI: Use emoji naturally to add expression and warmth.",
+  frequent: "EMOJI: Use emoji frequently to make responses lively and expressive.",
+};
+
+interface ProfileResult {
+  context: string;
+  style: string | null;
+  formality: string | null;
+  complexity: string | null;
+  emoji: string | null;
+}
+
+function buildStyleBlock(p: ProfileResult, personaStyle?: string | null): string {
+  const effectiveStyle = p.style || personaStyle || "balanced";
+  const parts = [STYLE_INSTRUCTIONS[effectiveStyle] || STYLE_INSTRUCTIONS.balanced];
+  if (p.formality && FORMALITY_INSTRUCTIONS[p.formality]) parts.push(FORMALITY_INSTRUCTIONS[p.formality]);
+  if (p.complexity && COMPLEXITY_INSTRUCTIONS[p.complexity]) parts.push(COMPLEXITY_INSTRUCTIONS[p.complexity]);
+  if (p.emoji && EMOJI_INSTRUCTIONS[p.emoji]) parts.push(EMOJI_INSTRUCTIONS[p.emoji]);
+  return parts.join("\n");
 }
 
 async function fetchMemoryContext(userId: string, query: string, mem0Key: string): Promise<string> {
@@ -37,14 +70,14 @@ async function fetchMemoryContext(userId: string, query: string, mem0Key: string
   }
 }
 
-async function fetchUserProfile(userId: string, supabase: any): Promise<{ context: string; style: string | null }> {
+async function fetchUserProfile(userId: string, supabase: any): Promise<ProfileResult> {
   try {
     const { data } = await supabase
       .from("user_profiles")
-      .select("display_name, goals, challenges, interests, career_stage, industry, preferred_response_style")
+      .select("display_name, goals, challenges, interests, career_stage, industry, preferred_response_style, formality_level, language_complexity, emoji_usage")
       .eq("user_id", userId)
       .maybeSingle();
-    if (!data) return { context: "", style: null };
+    if (!data) return { context: "", style: null, formality: null, complexity: null, emoji: null };
     const parts: string[] = [];
     if (data.display_name) parts.push(`Name: ${data.display_name}`);
     if (data.career_stage) parts.push(`Career stage: ${data.career_stage}`);
@@ -52,8 +85,14 @@ async function fetchUserProfile(userId: string, supabase: any): Promise<{ contex
     if (data.goals?.length) parts.push(`Goals: ${data.goals.join(", ")}`);
     if (data.challenges?.length) parts.push(`Challenges: ${data.challenges.join(", ")}`);
     if (data.interests?.length) parts.push(`Interests: ${data.interests.join(", ")}`);
-    return { context: parts.length > 0 ? parts.join("\n") : "", style: data.preferred_response_style };
-  } catch { return { context: "", style: null }; }
+    return {
+      context: parts.length > 0 ? parts.join("\n") : "",
+      style: data.preferred_response_style,
+      formality: data.formality_level,
+      complexity: data.language_complexity,
+      emoji: data.emoji_usage,
+    };
+  } catch { return { context: "", style: null, formality: null, complexity: null, emoji: null }; }
 }
 
 async function addMemories(userId: string, messages: any[], advisorId: string, advisorType: string, mem0Key: string) {
@@ -109,31 +148,31 @@ Deno.serve(async (req) => {
 
     const MEM0_API_KEY = Deno.env.get("MEM0_API_KEY");
     const lastUserMsg = messages[messages.length - 1]?.content || "";
-    let userStyle: string | null = null;
+    let profileResult: ProfileResult = { context: "", style: null, formality: null, complexity: null, emoji: null };
 
-    if (userId && MEM0_API_KEY) {
-      const [memoryContext, profileResult] = await Promise.all([
-        fetchMemoryContext(userId, lastUserMsg, MEM0_API_KEY),
-        fetchUserProfile(userId, supabase),
-      ]);
-      userStyle = profileResult.style;
-
-      if (profileResult.context || memoryContext) {
-        systemPrompt += "\n\n## CONTEXT ABOUT THE PERSON YOU'RE SPEAKING WITH (use this to personalize your advice):";
-        if (profileResult.context) systemPrompt += `\n\n### Their Profile:\n${profileResult.context}`;
-        if (memoryContext) systemPrompt += `\n\n### Relevant Memories from Past Conversations:\n${memoryContext}`;
-        systemPrompt += "\n\nUse this context naturally in your role as this persona. Reference their goals, challenges, or past discussions when relevant.";
+    if (userId) {
+      const profilePromise = fetchUserProfile(userId, supabase);
+      if (MEM0_API_KEY) {
+        const [memoryContext, pr] = await Promise.all([
+          fetchMemoryContext(userId, lastUserMsg, MEM0_API_KEY),
+          profilePromise,
+        ]);
+        profileResult = pr;
+        if (pr.context || memoryContext) {
+          systemPrompt += "\n\n## CONTEXT ABOUT THE PERSON YOU'RE SPEAKING WITH:";
+          if (pr.context) systemPrompt += `\n\n### Their Profile:\n${pr.context}`;
+          if (memoryContext) systemPrompt += `\n\n### Relevant Memories from Past Conversations:\n${memoryContext}`;
+          systemPrompt += "\n\nUse this context naturally in your role as this persona.";
+        }
+      } else {
+        profileResult = await profilePromise;
       }
-    } else if (userId) {
-      const profile = await fetchUserProfile(userId, supabase);
-      userStyle = profile.style;
     }
 
-    // Priority: User preference > Persona style > Default (balanced)
-    const effectiveStyle = userStyle || persona.response_style || "balanced";
-    systemPrompt += `\n\n${getStyleInstruction(effectiveStyle)}`;
+    // Priority: User preference > Persona style > Default
+    systemPrompt += `\n\n${buildStyleBlock(profileResult, persona.response_style)}`;
 
-    console.log("Persona chat - persona:", personaId, "style:", effectiveStyle, "userId:", userId || "anonymous");
+    console.log("Persona chat - persona:", personaId, "userId:", userId || "anonymous");
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

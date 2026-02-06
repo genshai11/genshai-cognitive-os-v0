@@ -1,125 +1,188 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Header } from "@/components/layout/Header";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { RESPONSE_STYLES, STYLE_IDS, type ResponseStyleId } from "@/lib/response-styles";
 import { toast } from "sonner";
-import { Check, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Loader2, User, MessageSquare, Sliders, Shield } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProfileInfoTab } from "@/components/settings/ProfileInfoTab";
+import { ResponseStyleTab } from "@/components/settings/ResponseStyleTab";
+import { CommunicationTab } from "@/components/settings/CommunicationTab";
+import { PrivacyTab } from "@/components/settings/PrivacyTab";
+import { ProfileCompletion } from "@/components/settings/ProfileCompletion";
+
+export interface UserProfile {
+  display_name: string | null;
+  career_stage: string | null;
+  industry: string | null;
+  goals: string[];
+  challenges: string[];
+  interests: string[];
+  preferred_response_style: string;
+  formality_level: string;
+  language_complexity: string;
+  emoji_usage: string;
+  bio: string | null;
+  learning_style: string | null;
+  onboarding_completed: boolean;
+}
+
+const DEFAULT_PROFILE: UserProfile = {
+  display_name: null,
+  career_stage: null,
+  industry: null,
+  goals: [],
+  challenges: [],
+  interests: [],
+  preferred_response_style: "balanced",
+  formality_level: "professional",
+  language_complexity: "moderate",
+  emoji_usage: "minimal",
+  bio: null,
+  learning_style: null,
+  onboarding_completed: false,
+};
 
 const Settings = () => {
   const { user } = useAuth();
-  const [selectedStyle, setSelectedStyle] = useState<ResponseStyleId>("balanced");
-  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const [loading, setLoading] = useState(true);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const hasProfileRef = useRef(false);
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
       const { data } = await supabase
         .from("user_profiles")
-        .select("preferred_response_style")
+        .select("display_name, career_stage, industry, goals, challenges, interests, preferred_response_style, formality_level, language_complexity, emoji_usage, bio, learning_style, onboarding_completed")
         .eq("user_id", user.id)
         .maybeSingle();
-      if (data?.preferred_response_style) {
-        setSelectedStyle(data.preferred_response_style as ResponseStyleId);
+      if (data) {
+        hasProfileRef.current = true;
+        setProfile({
+          display_name: data.display_name,
+          career_stage: data.career_stage,
+          industry: data.industry,
+          goals: data.goals || [],
+          challenges: data.challenges || [],
+          interests: data.interests || [],
+          preferred_response_style: data.preferred_response_style || "balanced",
+          formality_level: data.formality_level || "professional",
+          language_complexity: data.language_complexity || "moderate",
+          emoji_usage: data.emoji_usage || "minimal",
+          bio: data.bio,
+          learning_style: data.learning_style,
+          onboarding_completed: data.onboarding_completed || false,
+        });
       }
       setLoading(false);
     };
     load();
   }, [user]);
 
-  const savePreference = async (styleId: ResponseStyleId) => {
+  const saveProfile = useCallback(async (updates: Partial<UserProfile>) => {
     if (!user) return;
-    setSelectedStyle(styleId);
-    setSaving(true);
-    try {
-      const { data: existing } = await supabase
-        .from("user_profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
+    setSaveStatus("saving");
 
-      if (existing) {
-        await supabase
-          .from("user_profiles")
-          .update({ preferred_response_style: styleId })
-          .eq("user_id", user.id);
-      } else {
-        await supabase
-          .from("user_profiles")
-          .insert({ user_id: user.id, preferred_response_style: styleId });
+    // Clear any pending debounce
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        if (hasProfileRef.current) {
+          const { error } = await supabase
+            .from("user_profiles")
+            .update(updates as any)
+            .eq("user_id", user.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("user_profiles")
+            .insert({ user_id: user.id, ...updates } as any);
+          if (error) throw error;
+          hasProfileRef.current = true;
+        }
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 2000);
+      } catch {
+        toast.error("Failed to save");
+        setSaveStatus("idle");
       }
-      toast.success("Response style updated!");
-    } catch {
-      toast.error("Failed to save preference");
-    } finally {
-      setSaving(false);
-    }
-  };
+    }, 500);
+  }, [user]);
+
+  const updateField = useCallback(<K extends keyof UserProfile>(key: K, value: UserProfile[K]) => {
+    setProfile(prev => ({ ...prev, [key]: value }));
+    saveProfile({ [key]: value });
+  }, [saveProfile]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex items-center justify-center pt-32">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="max-w-3xl mx-auto px-6 pt-24 pb-16">
-        <h1 className="text-3xl font-bold mb-2">Settings</h1>
-        <p className="text-muted-foreground mb-8">
-          Customize how AI advisors respond to you.
-        </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Settings</h1>
+            <p className="text-muted-foreground mt-1">
+              Customize your profile and how advisors respond to you.
+            </p>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {saveStatus === "saving" && (
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
+              </span>
+            )}
+            {saveStatus === "saved" && (
+              <span className="text-primary">✓ Saved</span>
+            )}
+          </div>
+        </div>
 
-        <section>
-          <h2 className="text-xl font-semibold mb-1">Response Style</h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            Choose your preferred communication style. This applies to all advisors, personas, and books.
-          </p>
+        <ProfileCompletion profile={profile} />
 
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {STYLE_IDS.map((id) => {
-                const style = RESPONSE_STYLES[id];
-                const isSelected = selectedStyle === id;
-                return (
-                  <button
-                    key={id}
-                    onClick={() => savePreference(id)}
-                    disabled={saving}
-                    className={cn(
-                      "relative w-full text-left p-5 rounded-xl border transition-all duration-200",
-                      isSelected
-                        ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                        : "border-border bg-card hover:border-primary/40 hover:bg-card/80"
-                    )}
-                  >
-                    <div className="flex items-start gap-4">
-                      <span className="text-2xl mt-0.5">{style.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-foreground">{style.name}</span>
-                          {id === "balanced" && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                              Default
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">{style.description}</p>
-                        <p className="text-xs text-muted-foreground/70 mt-1 italic">{style.example}</p>
-                      </div>
-                      {isSelected && (
-                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                          <Check className="w-4 h-4 text-primary-foreground" />
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </section>
+        <Tabs defaultValue="profile" className="mt-6">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="profile" className="gap-1.5 text-xs sm:text-sm">
+              <User className="w-4 h-4 hidden sm:block" /> Profile
+            </TabsTrigger>
+            <TabsTrigger value="style" className="gap-1.5 text-xs sm:text-sm">
+              <MessageSquare className="w-4 h-4 hidden sm:block" /> Style
+            </TabsTrigger>
+            <TabsTrigger value="communication" className="gap-1.5 text-xs sm:text-sm">
+              <Sliders className="w-4 h-4 hidden sm:block" /> Communication
+            </TabsTrigger>
+            <TabsTrigger value="privacy" className="gap-1.5 text-xs sm:text-sm">
+              <Shield className="w-4 h-4 hidden sm:block" /> Privacy
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="profile">
+            <ProfileInfoTab profile={profile} updateField={updateField} />
+          </TabsContent>
+          <TabsContent value="style">
+            <ResponseStyleTab profile={profile} updateField={updateField} />
+          </TabsContent>
+          <TabsContent value="communication">
+            <CommunicationTab profile={profile} updateField={updateField} />
+          </TabsContent>
+          <TabsContent value="privacy">
+            <PrivacyTab />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
