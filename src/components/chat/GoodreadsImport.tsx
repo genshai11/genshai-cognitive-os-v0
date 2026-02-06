@@ -192,7 +192,7 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-primary" />
@@ -203,7 +203,7 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="search" className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <Tabs defaultValue="search">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="search" className="gap-1 text-xs">
               <Search className="w-3 h-3" /> Tìm kiếm
@@ -217,7 +217,7 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
           </TabsList>
 
           {/* Search Tab */}
-          <TabsContent value="search" className="flex-1 flex flex-col min-h-0 mt-4">
+          <TabsContent value="search" className="mt-4">
             <div className="flex gap-2 mb-3">
               <Input
                 value={searchQuery}
@@ -229,32 +229,28 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
                 {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               </Button>
             </div>
-            <ScrollArea className="flex-1 h-[40vh]">
-              <div className="space-y-2 pr-3">
-                {searchResults.map((book, i) => (
-                  <BookResultItem key={`${book.url}-${i}`} book={book} isImporting={importing === book.url} />
-                ))}
-              </div>
-            </ScrollArea>
+            <div className="space-y-2 max-h-[45vh] overflow-y-auto pr-1">
+              {searchResults.map((book, i) => (
+                <BookResultItem key={`${book.url}-${i}`} book={book} isImporting={importing === book.url} />
+              ))}
+            </div>
           </TabsContent>
 
           {/* Categories Tab */}
-          <TabsContent value="categories" className="flex-1 flex flex-col min-h-0 mt-4">
+          <TabsContent value="categories" className="mt-4">
             {!selectedCategory ? (
-              <ScrollArea className="flex-1 max-h-[45vh]">
-                <div className="grid grid-cols-2 gap-2 pr-3">
-                  {CATEGORIES.map((cat) => (
-                    <Button
-                      key={cat.id}
-                      variant="outline"
-                      className="justify-start h-auto py-3"
-                      onClick={() => handleBrowseCategory(cat)}
-                    >
-                      {cat.name}
-                    </Button>
-                  ))}
-                </div>
-              </ScrollArea>
+              <div className="grid grid-cols-2 gap-2 max-h-[45vh] overflow-y-auto pr-1">
+                {CATEGORIES.map((cat) => (
+                  <Button
+                    key={cat.id}
+                    variant="outline"
+                    className="justify-start h-auto py-3"
+                    onClick={() => handleBrowseCategory(cat)}
+                  >
+                    {cat.name}
+                  </Button>
+                ))}
+              </div>
             ) : (
               <>
                 <div className="flex items-center gap-2 mb-3">
@@ -266,13 +262,11 @@ export const GoodreadsImport = ({ open, onOpenChange }: GoodreadsImportProps) =>
                   </span>
                   {searching && <Loader2 className="w-4 h-4 animate-spin" />}
                 </div>
-                <ScrollArea className="flex-1 max-h-[40vh]">
-                  <div className="space-y-2 pr-3">
-                    {categoryResults.map((book, i) => (
-                      <BookResultItem key={`${book.url}-${i}`} book={book} isImporting={importing === book.url} />
-                    ))}
-                  </div>
-                </ScrollArea>
+                <div className="space-y-2 max-h-[45vh] overflow-y-auto pr-1">
+                  {categoryResults.map((book, i) => (
+                    <BookResultItem key={`${book.url}-${i}`} book={book} isImporting={importing === book.url} />
+                  ))}
+                </div>
               </>
             )}
           </TabsContent>
