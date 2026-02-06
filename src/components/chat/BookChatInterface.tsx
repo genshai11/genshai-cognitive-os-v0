@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useConversation } from '@/hooks/useConversation';
 import { MessageContent } from './MessageContent';
+import { AdvisorSwitcher } from './AdvisorSwitcher';
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -180,6 +181,8 @@ export const BookChatInterface = ({ book }: BookChatInterfaceProps) => {
           </div>
           
           <div className="flex items-center gap-2">
+            <AdvisorSwitcher currentId={book.id} currentType="book" />
+
             <Button asChild variant="ghost" size="icon" title="History">
               <Link to="/history">
                 <HistoryIcon className="w-5 h-5" />
