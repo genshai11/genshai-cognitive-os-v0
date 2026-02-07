@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { Loader2, CheckCircle2, XCircle, ExternalLink, AlertTriangle, Eye, EyeOff, ImageIcon } from 'lucide-react';
 
 type ProviderType = 'lovable' | 'cliproxy' | 'direct';
-type DirectProvider = 'openai' | 'anthropic' | 'google' | 'openrouter';
+type DirectProvider = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'megallm' | 'cometapi' | 'agentrouter';
 
 interface AISettings {
     provider_type: ProviderType;
@@ -34,6 +34,9 @@ const DEFAULT_MODELS = [
 
 const DIRECT_PROVIDERS = [
     { id: 'openrouter', label: 'OpenRouter', desc: 'Many models, single API key', defaultModel: 'google/gemini-2.0-flash-exp:free' },
+    { id: 'megallm', label: 'MegaLLM', desc: '70+ LLMs with smart fallbacks', defaultModel: 'gpt-4o-mini' },
+    { id: 'cometapi', label: 'CometAPI', desc: '500+ models (LLM, Image, Video, Music)', defaultModel: 'gpt-4o-mini' },
+    { id: 'agentrouter', label: 'AgentRouter', desc: 'Chinese public AI service', defaultModel: 'gpt-4o-mini' },
     { id: 'openai', label: 'OpenAI', desc: 'GPT-4o, GPT-4o-mini', defaultModel: 'gpt-4o-mini' },
     { id: 'google', label: 'Google AI', desc: 'Gemini models', defaultModel: 'gemini-2.0-flash' },
     { id: 'anthropic', label: 'Anthropic', desc: 'Claude models', defaultModel: 'claude-sonnet-4-5-20250929' },

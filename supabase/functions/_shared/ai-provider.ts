@@ -28,6 +28,9 @@ const DIRECT_PROVIDER_URLS: Record<string, string> = {
     anthropic: 'https://api.anthropic.com/v1/messages',
     google: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
     openrouter: 'https://openrouter.ai/api/v1/chat/completions',
+    megallm: 'https://ai.megallm.io/v1/chat/completions',
+    cometapi: 'https://api.cometapi.com/v1/chat/completions',
+    agentrouter: 'https://agentrouter.org/api/v1/chat/completions',
 };
 
 // Default models per direct provider
@@ -36,6 +39,9 @@ const DIRECT_DEFAULT_MODELS: Record<string, string> = {
     anthropic: 'claude-sonnet-4-5-20250929',
     google: 'gemini-2.0-flash',
     openrouter: 'google/gemini-2.0-flash-exp:free',
+    megallm: 'gpt-4o-mini',
+    cometapi: 'gpt-4o-mini',
+    agentrouter: 'gpt-4o-mini',
 };
 
 // In-memory cache (per Deno isolate, ~60s TTL)
@@ -304,7 +310,7 @@ export async function makeAIChatRequest(
             response.status,
             latencyMs,
             effectiveConfig !== config, // was_fallback if model was overridden
-        ).catch(() => {}); // silently ignore tracking errors
+        ).catch(() => { }); // silently ignore tracking errors
     }
 
     return response;
