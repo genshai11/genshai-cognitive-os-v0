@@ -249,14 +249,14 @@ export const MessageContent = ({ content }: MessageContentProps) => {
               key={`md-${i}`}
               className="prose prose-sm prose-invert max-w-none
                 prose-headings:font-serif prose-headings:text-foreground prose-headings:tracking-tight
-                prose-h1:text-xl prose-h1:font-bold prose-h1:mb-4 prose-h1:mt-6 prose-h1:flex prose-h1:items-center prose-h1:gap-2
-                prose-h2:text-lg prose-h2:font-semibold prose-h2:mb-3 prose-h2:mt-5 prose-h2:flex prose-h2:items-center prose-h2:gap-2 prose-h2:text-primary
-                prose-h3:text-base prose-h3:font-medium prose-h3:mb-2 prose-h3:mt-4 prose-h3:text-foreground/90
+                prose-h1:text-2xl prose-h1:font-bold prose-h1:mb-4 prose-h1:mt-6 prose-h1:flex prose-h1:items-center prose-h1:gap-2
+                prose-h2:text-xl prose-h2:font-semibold prose-h2:mb-3 prose-h2:mt-5 prose-h2:flex prose-h2:items-center prose-h2:gap-2 prose-h2:text-primary
+                prose-h3:text-lg prose-h3:font-medium prose-h3:mb-2 prose-h3:mt-4 prose-h3:text-foreground/90
                 prose-p:text-secondary-foreground prose-p:leading-[1.8] prose-p:mb-3
                 prose-strong:text-foreground prose-strong:font-semibold
                 prose-em:text-primary/80 prose-em:font-medium
                 prose-ul:my-3 prose-ul:pl-1 prose-ul:space-y-1.5
-                prose-ol:my-3 prose-ol:pl-1 prose-ol:space-y-1.5
+                prose-ol:my-3 prose-ol:pl-1 prose-ol:space-y-1.5 prose-ol:text-base prose-ol:font-semibold
                 prose-li:text-secondary-foreground prose-li:leading-relaxed
                 prose-blockquote:border-l-2 prose-blockquote:border-l-primary/50 prose-blockquote:bg-secondary/20
                 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg

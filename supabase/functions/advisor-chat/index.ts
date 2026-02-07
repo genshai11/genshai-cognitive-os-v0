@@ -43,34 +43,44 @@ const VISUALIZATION_GUIDE = `
 
 You can create visual diagrams using Mermaid syntax to explain complex concepts:
 
+**CRITICAL MERMAID RULES (MUST FOLLOW):**
+1. **Always wrap labels in quotes**: Use \`["Label text"]\` for ALL labels, especially with: \`, ", :, (, ), -\`
+2. **NO inline style**: Use \`classDef\` + \`class\` instead of \`style\`
+3. **Node IDs**: Use simple IDs like A, B, C (NO hyphens, NO special chars)
+4. **Arrows**: \`-->\` (normal), \`==>\` (thick), \`-.->\` (dotted)
+5. **Keep simple**: Max 8 nodes per diagram
+
 **Flowcharts** (decision trees, processes):
 \`\`\`mermaid
 graph TD
-    A[Start] --> B{Decision?}
-    B -->|Yes| C[Action 1]
-    B -->|No| D[Action 2]
-    C --> E[End]
+    A["Start Process"] --> B{"Is Valid?"}
+    B -->|Yes| C["Process Data"]
+    B -->|No| D["Show Error"]
+    C --> E["Complete"]
     D --> E
+    
+    classDef highlight fill:#fdd,stroke:#333,stroke-width:2px
+    class A,E highlight
 \`\`\`
 
-**Sequence Diagrams** (interactions, workflows):
+**Sequence Diagrams** (interactions):
 \`\`\`mermaid
 sequenceDiagram
-    User->>System: Request
-    System->>Database: Query
-    Database-->>System: Data
-    System-->>User: Response
+    participant U as User
+    participant S as System
+    U->>S: Request Data
+    S-->>U: Return Result
 \`\`\`
 
-**Mind Maps** (concept relationships):
+**Mind Maps** (concept hierarchies):
 \`\`\`mermaid
 mindmap
-  root((Main Idea))
-    Concept 1
-      Detail A
-      Detail B
-    Concept 2
-      Detail C
+  root["Central Concept"]
+    Topic1["Topic 1"]
+      DetailA["Detail A"]
+      DetailB["Detail B"]
+    Topic2["Topic 2"]
+      DetailC["Detail C"]
 \`\`\`
 
 **Use diagrams when explaining:**
@@ -80,8 +90,13 @@ mindmap
 - Concept hierarchies
 - Comparisons or alternatives
 
-Keep diagrams simple and focused. Use clear labels.
+**AVOID (Common Errors):**
+- ❌ \`A[Label: "text"]\` → ✅ \`A["Label: text"]\`
+- ❌ \`style A fill:#fdd\` → ✅ \`classDef highlight fill:#fdd\` + \`class A highlight\`
+- ❌ Node IDs with hyphens → ✅ Use camelCase
+- ❌ Too many nodes (>8)
 `;
+
 
 const IMAGE_GENERATION_GUIDE = `
 
