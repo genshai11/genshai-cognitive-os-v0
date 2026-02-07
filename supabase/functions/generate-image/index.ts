@@ -32,19 +32,19 @@ Deno.serve(async (req) => {
 
         console.log("Generating image with prompt:", prompt);
 
-        // Use Lovable AI Gateway for image generation
-        const response = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+        // Use Lovable AI Gateway with Gemini image generation model
+        const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${LOVABLE_API_KEY}`,
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                model: "dall-e-3",
-                prompt: prompt,
-                size: "1024x1024",
-                quality: "standard",
-                n: 1,
+                model: "google/gemini-2.5-flash-image",
+                messages: [
+                    { role: "user", content: prompt }
+                ],
+                modalities: ["image", "text"],
             }),
         });
 
@@ -58,9 +58,10 @@ Deno.serve(async (req) => {
         }
 
         const data = await response.json();
-        const imageUrl = data.data[0]?.url;
+        const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
         if (!imageUrl) {
+            console.error("No image in response:", JSON.stringify(data).slice(0, 500));
             return new Response(
                 JSON.stringify({ error: "No image URL returned" }),
                 { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
