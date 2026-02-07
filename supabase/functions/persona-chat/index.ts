@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getSystemPrompt } from "../_shared/blueprint-compiler.ts";
+import { getSkillContext } from "../_shared/skill-discovery.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -261,8 +262,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Build system prompt with style, context, and visualization guide
-    let systemPrompt = persona.system_prompt;
+    // Inject skill context if user is authenticated
+    if (userId) {
+      const skillContext = await getSkillContext(supabase, userId, personaId);
+      if (skillContext) {
+        systemPrompt += `\n\n${skillContext}`;
+      }
+    }
+
+    // Add style, visualization, and image generation guides
     systemPrompt += `\n\n${buildStyleBlock(profileResult, persona.response_style)}`;
     systemPrompt += VISUALIZATION_GUIDE;
     systemPrompt += IMAGE_GENERATION_GUIDE;

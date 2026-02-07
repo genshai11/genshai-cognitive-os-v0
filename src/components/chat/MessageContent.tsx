@@ -5,6 +5,7 @@ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Copy, Check, Lightbulb, Quote, BookOpen, TrendingUp, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
 import { MermaidBlock } from './MermaidBlock';
 import { ImageBlock } from './ImageBlock';
+import { SkillExecutionBlock } from '../skills/SkillExecutionBlock';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -140,11 +141,12 @@ const CALLOUT_PATTERNS: Record<string, { icon: typeof Lightbulb; label: string; 
 
 // ─── Main Component ─────────────────────────────────────────────
 export const MessageContent = ({ content }: MessageContentProps) => {
-  // Extract chart, mermaid, and image blocks from content before markdown rendering
-  const { processedContent, charts, mermaidDiagrams, images } = useMemo(() => {
+  // Extract chart, mermaid, image, and skill-execute blocks from content before markdown rendering
+  const { processedContent, charts, mermaidDiagrams, images, skillExecutions } = useMemo(() => {
     const chartBlocks: ChartData[] = [];
     const mermaidBlocks: { chart: string; title?: string }[] = [];
     const imageBlocks: { prompt: string; caption?: string }[] = [];
+    const skillBlocks: { skillId: string; skillName: string; input: any }[] = [];
 
     let processed = content
       // Extract chart blocks
@@ -171,28 +173,39 @@ export const MessageContent = ({ content }: MessageContentProps) => {
         } catch {
           return `\`\`\`\n${json}\`\`\``;
         }
+      })
+      // Extract skill-execute blocks
+      .replace(/```skill-execute\n([\s\S]*?)```/g, (_, json) => {
+        try {
+          const parsed = JSON.parse(json.trim());
+          skillBlocks.push(parsed);
+          return `\n<!--skill-${skillBlocks.length - 1}-->\n`;
+        } catch {
+          return `\`\`\`\n${json}\`\`\``;
+        }
       });
 
     return {
       processedContent: processed,
       charts: chartBlocks,
       mermaidDiagrams: mermaidBlocks,
-      images: imageBlocks
+      images: imageBlocks,
+      skillExecutions: skillBlocks
     };
   }, [content]);
 
-  // Split content by chart, mermaid, and image placeholders and render
+  // Split content by chart, mermaid, image, and skill placeholders and render
   const segments = useMemo(() => {
-    const parts = processedContent.split(/<!--(chart|mermaid|image)-(\d+)-->/);
-    const result: Array<{ type: 'chart' | 'mermaid' | 'image' | 'markdown'; index?: number; content?: string }> = [];
+    const parts = processedContent.split(/<!--(chart|mermaid|image|skill)-(\d+)-->/);
+    const result: Array<{ type: 'chart' | 'mermaid' | 'image' | 'skill' | 'markdown'; index?: number; content?: string }> = [];
 
     for (let i = 0; i < parts.length; i++) {
       if (i % 3 === 0 && parts[i].trim()) {
         // Markdown content
         result.push({ type: 'markdown', content: parts[i] });
       } else if (i % 3 === 1) {
-        // Block type (chart, mermaid, or image)
-        const blockType = parts[i] as 'chart' | 'mermaid' | 'image';
+        // Block type (chart, mermaid, image, or skill)
+        const blockType = parts[i] as 'chart' | 'mermaid' | 'image' | 'skill';
         const index = parseInt(parts[i + 1]);
         result.push({ type: blockType, index });
       }
@@ -212,6 +225,9 @@ export const MessageContent = ({ content }: MessageContentProps) => {
         }
         if (segment.type === 'image' && segment.index !== undefined && images[segment.index]) {
           return <ImageBlock key={`image-${i}`} {...images[segment.index]} />;
+        }
+        if (segment.type === 'skill' && segment.index !== undefined && skillExecutions[segment.index]) {
+          return <SkillExecutionBlock key={`skill-${i}`} {...skillExecutions[segment.index]} autoExecute={true} />;
         }
         if (segment.type === 'markdown' && segment.content?.trim()) {
           return (

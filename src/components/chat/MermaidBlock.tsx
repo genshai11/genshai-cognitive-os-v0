@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
-import { Network } from 'lucide-react';
+import { Network, Maximize2 } from 'lucide-react';
+import { Lightbox } from '@/components/ui/Lightbox';
 
 interface MermaidBlockProps {
     chart: string;
@@ -10,6 +11,7 @@ interface MermaidBlockProps {
 export const MermaidBlock = ({ chart, title }: MermaidBlockProps) => {
     const ref = useRef<HTMLDivElement>(null);
     const [error, setError] = useState(false);
+    const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
     useEffect(() => {
         const renderDiagram = async () => {
@@ -64,17 +66,38 @@ export const MermaidBlock = ({ chart, title }: MermaidBlockProps) => {
     }
 
     return (
-        <div className="my-5 p-4 rounded-xl border border-border bg-secondary/20">
-            {title && (
-                <div className="flex items-center gap-2 mb-3">
-                    <Network className="w-4 h-4 text-primary" />
-                    <h4 className="font-serif font-semibold text-sm text-foreground">{title}</h4>
+        <>
+            <div className="my-5 p-4 rounded-xl border border-border bg-secondary/20 group relative">
+                {title && (
+                    <div className="flex items-center gap-2 mb-3">
+                        <Network className="w-4 h-4 text-primary" />
+                        <h4 className="font-serif font-semibold text-sm text-foreground">{title}</h4>
+                    </div>
+                )}
+                <div
+                    ref={ref}
+                    className="flex items-center justify-center [&_svg]:max-w-full [&_svg]:h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setIsLightboxOpen(true)}
+                />
+                {/* Zoom hint */}
+                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-background/90 border border-border text-xs text-muted-foreground">
+                        <Maximize2 className="w-3 h-3" />
+                        <span>Click to zoom</span>
+                    </div>
                 </div>
-            )}
-            <div
-                ref={ref}
-                className="flex items-center justify-center [&_svg]:max-w-full [&_svg]:h-auto"
-            />
-        </div>
+            </div>
+
+            {/* Lightbox */}
+            <Lightbox
+                isOpen={isLightboxOpen}
+                onClose={() => setIsLightboxOpen(false)}
+                title={title || 'Diagram'}
+            >
+                <div className="flex items-center justify-center">
+                    <div dangerouslySetInnerHTML={{ __html: ref.current?.innerHTML || '' }} />
+                </div>
+            </Lightbox>
+        </>
     );
 };

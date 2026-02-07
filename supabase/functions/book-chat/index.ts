@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getSystemPrompt } from "../_shared/blueprint-compiler.ts";
+import { getSkillContext } from "../_shared/skill-discovery.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -262,11 +263,22 @@ Deno.serve(async (req) => {
         }
       } else {
         profileResult = await profilePromise;
-        // Build system prompt with style, context, and visualization guide
-        systemPrompt += `\n\n${buildStyleBlock(profileResult)}`;
-        systemPrompt += VISUALIZATION_GUIDE;
-        systemPrompt += IMAGE_GENERATION_GUIDE;
       }
+    }
+
+    // Inject skill context if user is authenticated
+    if (userId) {
+      const skillContext = await getSkillContext(supabase, userId, bookId);
+      if (skillContext) {
+        systemPrompt += `\n\n${skillContext}`;
+      }
+    }
+
+    // Add style, visualization, and image generation guides
+    if (userId) {
+      systemPrompt += `\n\n${buildStyleBlock(profileResult)}`;
+      systemPrompt += VISUALIZATION_GUIDE;
+      systemPrompt += IMAGE_GENERATION_GUIDE;
     } else {
       // If no userId, still apply style and visualization guide
       systemPrompt += `\n\n${buildStyleBlock(profileResult)}`;

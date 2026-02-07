@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getSystemPrompt } from "../_shared/blueprint-compiler.ts";
+import { getSkillContext } from "../_shared/skill-discovery.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -254,6 +255,14 @@ Deno.serve(async (req) => {
         }
       } else {
         profileResult = await profilePromise;
+      }
+    }
+
+    // Inject skill context if user is authenticated
+    if (userId) {
+      const skillContext = await getSkillContext(supabase, userId, advisorId);
+      if (skillContext) {
+        systemPrompt += `\n\n${skillContext}`;
       }
     }
 

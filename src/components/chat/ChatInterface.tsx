@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Loader2, ArrowLeft, Trash2, History as HistoryIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -10,7 +10,7 @@ import { useConversation } from '@/hooks/useConversation';
 import { MessageContent } from './MessageContent';
 import { AdvisorSwitcher } from './AdvisorSwitcher';
 import { useState } from 'react';
-import { 
+import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
@@ -28,11 +28,7 @@ export const ChatInterface = ({ advisor }: ChatInterfaceProps) => {
   });
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-
-  const scrollToBottom = () => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); };
-  useEffect(() => { scrollToBottom(); }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,10 +79,10 @@ export const ChatInterface = ({ advisor }: ChatInterfaceProps) => {
           } catch { buffer = line + '\n' + buffer; break; }
         }
       }
-      if (assistantContent) { 
+      if (assistantContent) {
         const allMsgs = [...messages, userMessage, { role: 'assistant' as const, content: assistantContent }];
-        saveMessage({ role: 'assistant', content: assistantContent }); 
-        extractProfile(allMsgs); 
+        saveMessage({ role: 'assistant', content: assistantContent });
+        extractProfile(allMsgs);
         detectStyle(allMsgs);
       }
     } catch (error) {
@@ -154,7 +150,6 @@ export const ChatInterface = ({ advisor }: ChatInterfaceProps) => {
               <div className="bg-card border border-border rounded-2xl px-4 py-3"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
             </motion.div>
           )}
-          <div ref={messagesEndRef} />
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Loader2, ArrowLeft, Trash2, History as HistoryIcon, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useConversation } from '@/hooks/useConversation';
 import { MessageContent } from './MessageContent';
 import { AdvisorSwitcher } from './AdvisorSwitcher';
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -45,16 +45,7 @@ export const BookChatInterface = ({ book }: BookChatInterfaceProps) => {
   });
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,10 +133,10 @@ export const BookChatInterface = ({ book }: BookChatInterfaceProps) => {
       }
     } catch (error) {
       console.error('Chat error:', error);
-      toast({ 
-        title: 'Something went wrong', 
-        description: 'Failed to get a response. Please try again.', 
-        variant: 'destructive' 
+      toast({
+        title: 'Something went wrong',
+        description: 'Failed to get a response. Please try again.',
+        variant: 'destructive'
       });
     } finally {
       setIsLoading(false);
@@ -183,7 +174,7 @@ export const BookChatInterface = ({ book }: BookChatInterfaceProps) => {
             <h1 className="font-serif font-semibold line-clamp-1">{book.title}</h1>
             <p className="text-sm text-muted-foreground">{book.author}</p>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <AdvisorSwitcher currentId={book.id} currentType="book" />
 
@@ -263,11 +254,10 @@ export const BookChatInterface = ({ book }: BookChatInterfaceProps) => {
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-card border border-border'
-                  }`}
+                  className={`max-w-[85%] rounded-2xl px-4 py-3 ${message.role === 'user'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-card border border-border'
+                    }`}
                 >
                   {message.role === 'assistant' ? (
                     <MessageContent content={message.content} />
@@ -290,8 +280,6 @@ export const BookChatInterface = ({ book }: BookChatInterfaceProps) => {
               </div>
             </motion.div>
           )}
-
-          <div ref={messagesEndRef} />
         </div>
       </div>
 

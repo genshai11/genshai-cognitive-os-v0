@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Loader2, ArrowLeft, Sparkles, Trash2, History as HistoryIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useConversation } from '@/hooks/useConversation';
 import { MessageContent } from './MessageContent';
 import { AdvisorSwitcher } from './AdvisorSwitcher';
-import { 
+import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
@@ -30,11 +30,7 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
   const [isLoading, setIsLoading] = useState(false);
   const [webContext, setWebContext] = useState<string | null>(null);
   const [isLoadingContext, setIsLoadingContext] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-
-  const scrollToBottom = () => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); };
-  useEffect(() => { scrollToBottom(); }, [messages]);
 
   const fetchWebContext = async () => {
     if (webContext || !persona.wikiUrl) return null;
@@ -107,10 +103,10 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
           } catch { buffer = line + '\n' + buffer; break; }
         }
       }
-      if (assistantContent) { 
+      if (assistantContent) {
         const allMsgs = [...messages, userMessage, { role: 'assistant' as const, content: assistantContent }];
-        saveMessage({ role: 'assistant', content: assistantContent }); 
-        extractProfile(allMsgs); 
+        saveMessage({ role: 'assistant', content: assistantContent });
+        extractProfile(allMsgs);
         detectStyle(allMsgs);
       }
     } catch (error) {
@@ -183,7 +179,6 @@ export const PersonaChatInterface = ({ persona }: PersonaChatInterfaceProps) => 
               <div className="bg-card border border-border rounded-2xl px-4 py-3"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
             </motion.div>
           )}
-          <div ref={messagesEndRef} />
         </div>
       </div>
 
