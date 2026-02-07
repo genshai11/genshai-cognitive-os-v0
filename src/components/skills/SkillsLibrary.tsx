@@ -8,21 +8,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
     Search,
-    Filter,
     TrendingUp,
     Clock,
     CheckCircle2,
     XCircle,
     AlertCircle,
     Sparkles,
-    BarChart3
 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
-import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { getUserSkills, getSkillStats } from '@/lib/skills/skill-discovery';
 import type { SkillDefinition, SkillCategory, SkillStatus } from '@/types/skills';
 
@@ -44,11 +40,6 @@ export function SkillsLibrary() {
 
     // Load user from Supabase
     useEffect(() => {
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
-
         supabase.auth.getUser().then(({ data }) => {
             setUser(data.user);
         });

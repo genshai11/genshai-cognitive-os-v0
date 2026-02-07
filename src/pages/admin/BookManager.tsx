@@ -21,7 +21,7 @@ interface Book {
   cover_emoji: string | null;
   color: string | null;
   system_prompt: string;
-  cognitive_blueprint: Record<string, any> | null;
+  cognitive_blueprint?: any;
   key_concepts: string[] | null;
   genres: string[] | null;
   language: string | null;

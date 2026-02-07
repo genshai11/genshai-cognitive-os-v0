@@ -20,7 +20,7 @@ interface Framework {
   icon: string | null;
   color: string | null;
   system_prompt: string;
-  cognitive_blueprint: Record<string, any> | null;
+  cognitive_blueprint?: any;
   mental_models: string[] | null;
   example_questions: string[] | null;
   is_active: boolean | null;
