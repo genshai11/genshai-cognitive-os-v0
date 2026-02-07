@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getSystemPrompt } from "../_shared/blueprint-compiler.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -118,7 +119,7 @@ Deno.serve(async (req) => {
 
   try {
     const { messages, personaId, additionalContext, userId } = await req.json();
-    
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -128,7 +129,7 @@ Deno.serve(async (req) => {
 
     const { data: persona, error: fetchError } = await supabase
       .from("custom_personas")
-      .select("system_prompt, wiki_url, name, response_style")
+      .select("system_prompt, wiki_url, name, response_style, cognitive_blueprint")
       .eq("id", personaId)
       .single();
 
@@ -140,8 +141,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    let systemPrompt = persona.system_prompt;
-    
+    // Use cognitive blueprint if available, otherwise fall back to flat system_prompt
+    let systemPrompt = getSystemPrompt(
+      persona.system_prompt,
+      persona.cognitive_blueprint,
+      persona.name,
+      "persona"
+    );
+
     if (additionalContext) {
       systemPrompt += `\n\n## Reference Information About You:\n${additionalContext}\n\nUse this information to ground your responses in real facts about your life, but always speak as yourself in first person.`;
     }
@@ -172,7 +179,7 @@ Deno.serve(async (req) => {
     // Priority: User preference > Persona style > Default
     systemPrompt += `\n\n${buildStyleBlock(profileResult, persona.response_style)}`;
 
-    console.log("Persona chat - persona:", personaId, "userId:", userId || "anonymous");
+    console.log("Persona chat - persona:", personaId, "userId:", userId || "anonymous", "blueprint:", !!persona.cognitive_blueprint);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

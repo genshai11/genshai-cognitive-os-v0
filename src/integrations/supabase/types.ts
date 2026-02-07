@@ -47,6 +47,7 @@ export type Database = {
       custom_books: {
         Row: {
           author: string
+          cognitive_blueprint: Json | null
           color: string | null
           cover_emoji: string | null
           created_at: string
@@ -63,6 +64,7 @@ export type Database = {
         }
         Insert: {
           author: string
+          cognitive_blueprint?: Json | null
           color?: string | null
           cover_emoji?: string | null
           created_at?: string
@@ -79,6 +81,7 @@ export type Database = {
         }
         Update: {
           author?: string
+          cognitive_blueprint?: Json | null
           color?: string | null
           cover_emoji?: string | null
           created_at?: string
@@ -97,6 +100,7 @@ export type Database = {
       }
       custom_frameworks: {
         Row: {
+          cognitive_blueprint: Json | null
           color: string | null
           created_at: string
           description: string | null
@@ -111,6 +115,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cognitive_blueprint?: Json | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -125,6 +130,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cognitive_blueprint?: Json | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -143,6 +149,7 @@ export type Database = {
       custom_personas: {
         Row: {
           avatar: string | null
+          cognitive_blueprint: Json | null
           color: string | null
           created_at: string
           description: string | null
@@ -159,6 +166,7 @@ export type Database = {
         }
         Insert: {
           avatar?: string | null
+          cognitive_blueprint?: Json | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -175,6 +183,7 @@ export type Database = {
         }
         Update: {
           avatar?: string | null
+          cognitive_blueprint?: Json | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -197,6 +206,7 @@ export type Database = {
           conversation_id: string
           created_at: string
           id: string
+          metadata: Json | null
           role: string
         }
         Insert: {
@@ -204,6 +214,7 @@ export type Database = {
           conversation_id: string
           created_at?: string
           id?: string
+          metadata?: Json | null
           role: string
         }
         Update: {
@@ -211,6 +222,7 @@ export type Database = {
           conversation_id?: string
           created_at?: string
           id?: string
+          metadata?: Json | null
           role?: string
         }
         Relationships: [

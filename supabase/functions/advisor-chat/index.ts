@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getSystemPrompt } from "../_shared/blueprint-compiler.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -118,7 +119,7 @@ Deno.serve(async (req) => {
 
   try {
     const { messages, advisorId, userId } = await req.json();
-    
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -128,7 +129,7 @@ Deno.serve(async (req) => {
 
     const { data: framework, error: fetchError } = await supabase
       .from("custom_frameworks")
-      .select("system_prompt, name")
+      .select("system_prompt, name, cognitive_blueprint")
       .eq("id", advisorId)
       .single();
 
@@ -140,7 +141,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    let systemPrompt = framework.system_prompt;
+    // Use cognitive blueprint if available, otherwise fall back to flat system_prompt
+    let systemPrompt = getSystemPrompt(
+      framework.system_prompt,
+      framework.cognitive_blueprint,
+      framework.name,
+      "framework"
+    );
+
     const MEM0_API_KEY = Deno.env.get("MEM0_API_KEY");
     const lastUserMsg = messages[messages.length - 1]?.content || "";
     let profileResult: ProfileResult = { context: "", style: null, formality: null, complexity: null, emoji: null };
@@ -165,6 +173,8 @@ Deno.serve(async (req) => {
     }
 
     systemPrompt += `\n\n${buildStyleBlock(profileResult)}`;
+
+    console.log("Framework chat - advisor:", advisorId, "userId:", userId || "anonymous", "blueprint:", !!framework.cognitive_blueprint);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

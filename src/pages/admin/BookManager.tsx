@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Pencil, Trash2, Save, BookOpen, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Save, BookOpen, Sparkles, Loader2, Brain } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useGenerateAdvisor } from '@/hooks/useGenerateAdvisor';
 
@@ -21,6 +21,7 @@ interface Book {
   cover_emoji: string | null;
   color: string | null;
   system_prompt: string;
+  cognitive_blueprint: Record<string, any> | null;
   key_concepts: string[] | null;
   genres: string[] | null;
   language: string | null;
@@ -35,6 +36,7 @@ const emptyBook: Omit<Book, 'id'> = {
   cover_emoji: '📚',
   color: 'from-amber-500 to-orange-700',
   system_prompt: '',
+  cognitive_blueprint: null,
   key_concepts: [],
   genres: [],
   language: 'en',
@@ -82,6 +84,7 @@ const BookManager = () => {
         cover_emoji: result.cover_emoji || formData.cover_emoji,
         color: result.color || formData.color,
         system_prompt: result.system_prompt || formData.system_prompt,
+        cognitive_blueprint: result.cognitive_blueprint || formData.cognitive_blueprint,
         key_concepts: result.key_concepts || formData.key_concepts,
         genres: result.genres || formData.genres,
         language: result.language || formData.language,
@@ -128,6 +131,7 @@ const BookManager = () => {
       cover_emoji: book.cover_emoji,
       color: book.color,
       system_prompt: book.system_prompt,
+      cognitive_blueprint: book.cognitive_blueprint,
       key_concepts: book.key_concepts,
       genres: book.genres,
       language: book.language,
@@ -153,6 +157,7 @@ const BookManager = () => {
         cover_emoji: formData.cover_emoji,
         color: formData.color,
         system_prompt: formData.system_prompt,
+        cognitive_blueprint: formData.cognitive_blueprint,
         key_concepts: formData.key_concepts,
         genres: formData.genres,
         language: formData.language,
@@ -274,6 +279,11 @@ const BookManager = () => {
                           {book.description}
                         </p>
                         <div className="flex flex-wrap gap-1">
+                          {book.cognitive_blueprint && (
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded flex items-center gap-1">
+                              <Brain className="h-3 w-3" /> Blueprint
+                            </span>
+                          )}
                           {book.key_concepts?.slice(0, 3).map((concept) => (
                             <span key={concept} className="text-xs bg-muted px-2 py-1 rounded">
                               {concept}
@@ -414,6 +424,36 @@ const BookManager = () => {
                   placeholder="You embody the wisdom from [Book Title]. Guide users through the key teachings..."
                   rows={8}
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="cognitive_blueprint" className="flex items-center gap-2">
+                  <Brain className="h-4 w-4" />
+                  Cognitive Blueprint
+                </Label>
+                {formData.cognitive_blueprint ? (
+                  <Textarea
+                    id="cognitive_blueprint"
+                    value={JSON.stringify(formData.cognitive_blueprint, null, 2)}
+                    onChange={(e) => {
+                      try {
+                        const parsed = JSON.parse(e.target.value);
+                        setFormData({ ...formData, cognitive_blueprint: parsed });
+                      } catch {
+                        // Allow typing invalid JSON temporarily
+                      }
+                    }}
+                    rows={12}
+                    className="font-mono text-xs"
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground py-3 px-3 border border-dashed rounded-md">
+                    No blueprint yet. Click the auto-generate button above to create one.
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  The cognitive blueprint captures this book's thinking methodology — its worldview, how it teaches you to see problems, and its reasoning framework.
+                </p>
               </div>
 
               <div>

@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Sparkles, Loader2, Brain } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useGenerateAdvisor } from '@/hooks/useGenerateAdvisor';
 
@@ -21,6 +21,7 @@ interface Persona {
   avatar: string | null;
   color: string | null;
   system_prompt: string;
+  cognitive_blueprint: Record<string, any> | null;
   response_style: string | null;
   tags: string[] | null;
   wiki_url: string | null;
@@ -35,6 +36,7 @@ const emptyPersona: Omit<Persona, 'id'> = {
   avatar: '🧠',
   color: 'from-purple-500 to-indigo-700',
   system_prompt: '',
+  cognitive_blueprint: null,
   response_style: 'balanced',
   tags: [],
   wiki_url: '',
@@ -67,6 +69,7 @@ const PersonaManager = () => {
         avatar: result.avatar || formData.avatar,
         color: result.color || formData.color,
         system_prompt: result.system_prompt || formData.system_prompt,
+        cognitive_blueprint: result.cognitive_blueprint || formData.cognitive_blueprint,
         response_style: result.response_style || formData.response_style,
         tags: result.tags || formData.tags,
         wiki_url: result.wiki_url || formData.wiki_url,
@@ -113,6 +116,7 @@ const PersonaManager = () => {
       avatar: persona.avatar,
       color: persona.color,
       system_prompt: persona.system_prompt,
+      cognitive_blueprint: persona.cognitive_blueprint,
       response_style: persona.response_style,
       tags: persona.tags,
       wiki_url: persona.wiki_url,
@@ -138,6 +142,7 @@ const PersonaManager = () => {
         avatar: formData.avatar,
         color: formData.color,
         system_prompt: formData.system_prompt,
+        cognitive_blueprint: formData.cognitive_blueprint,
         response_style: formData.response_style,
         tags: formData.tags,
         wiki_url: formData.wiki_url,
@@ -241,6 +246,11 @@ const PersonaManager = () => {
                     {persona.description}
                   </p>
                   <div className="flex flex-wrap gap-1">
+                    {persona.cognitive_blueprint && (
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded flex items-center gap-1">
+                        <Brain className="h-3 w-3" /> Blueprint
+                      </span>
+                    )}
                     {persona.tags?.slice(0, 3).map((tag) => (
                       <span key={tag} className="text-xs bg-muted px-2 py-1 rounded">
                         {tag}
@@ -349,6 +359,36 @@ const PersonaManager = () => {
                   placeholder="You ARE [persona name]. Speak in first person..."
                   rows={8}
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="cognitive_blueprint" className="flex items-center gap-2">
+                  <Brain className="h-4 w-4" />
+                  Cognitive Blueprint
+                </Label>
+                {formData.cognitive_blueprint ? (
+                  <Textarea
+                    id="cognitive_blueprint"
+                    value={JSON.stringify(formData.cognitive_blueprint, null, 2)}
+                    onChange={(e) => {
+                      try {
+                        const parsed = JSON.parse(e.target.value);
+                        setFormData({ ...formData, cognitive_blueprint: parsed });
+                      } catch {
+                        // Allow typing invalid JSON temporarily
+                      }
+                    }}
+                    rows={12}
+                    className="font-mono text-xs"
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground py-3 px-3 border border-dashed rounded-md">
+                    No blueprint yet. Click the auto-generate button above to create one, or the blueprint will be generated when you create this persona.
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  The cognitive blueprint defines HOW this persona thinks — their worldview, diagnostic patterns, reasoning chain, and communication style.
+                </p>
               </div>
 
               <div>

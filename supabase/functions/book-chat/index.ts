@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getSystemPrompt } from "../_shared/blueprint-compiler.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -148,7 +149,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    let systemPrompt = book.system_prompt;
+    // Use cognitive blueprint if available, otherwise fall back to flat system_prompt
+    let systemPrompt = getSystemPrompt(
+      book.system_prompt,
+      book.cognitive_blueprint,
+      book.title,
+      "book"
+    );
+
     const MEM0_API_KEY = Deno.env.get("MEM0_API_KEY");
     const lastUserMsg = messages[messages.length - 1]?.content || "";
     let profileResult: ProfileResult = { context: "", style: null, formality: null, complexity: null, emoji: null };
@@ -189,6 +197,8 @@ Deno.serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log("Book chat - book:", bookId, "userId:", userId || "anonymous", "blueprint:", !!book.cognitive_blueprint);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

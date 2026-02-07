@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Pencil, Trash2, Save, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Save, Sparkles, Loader2, Brain } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useGenerateAdvisor } from '@/hooks/useGenerateAdvisor';
 
@@ -20,6 +20,7 @@ interface Framework {
   icon: string | null;
   color: string | null;
   system_prompt: string;
+  cognitive_blueprint: Record<string, any> | null;
   mental_models: string[] | null;
   example_questions: string[] | null;
   is_active: boolean | null;
@@ -32,6 +33,7 @@ const emptyFramework: Omit<Framework, 'id'> = {
   icon: '🎯',
   color: 'from-blue-500 to-cyan-700',
   system_prompt: '',
+  cognitive_blueprint: null,
   mental_models: [],
   example_questions: [],
   is_active: true,
@@ -62,6 +64,7 @@ const FrameworkManager = () => {
         icon: result.icon || formData.icon,
         color: result.color || formData.color,
         system_prompt: result.system_prompt || formData.system_prompt,
+        cognitive_blueprint: result.cognitive_blueprint || formData.cognitive_blueprint,
         mental_models: result.mental_models || formData.mental_models,
         example_questions: result.example_questions || formData.example_questions,
       });
@@ -106,6 +109,7 @@ const FrameworkManager = () => {
       icon: framework.icon,
       color: framework.color,
       system_prompt: framework.system_prompt,
+      cognitive_blueprint: framework.cognitive_blueprint,
       mental_models: framework.mental_models,
       example_questions: framework.example_questions,
       is_active: framework.is_active,
@@ -129,6 +133,7 @@ const FrameworkManager = () => {
         icon: formData.icon,
         color: formData.color,
         system_prompt: formData.system_prompt,
+        cognitive_blueprint: formData.cognitive_blueprint,
         mental_models: formData.mental_models,
         example_questions: formData.example_questions,
         is_active: formData.is_active,
@@ -230,6 +235,11 @@ const FrameworkManager = () => {
                     {framework.description}
                   </p>
                   <div className="flex flex-wrap gap-1">
+                    {framework.cognitive_blueprint && (
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded flex items-center gap-1">
+                        <Brain className="h-3 w-3" /> Blueprint
+                      </span>
+                    )}
                     {framework.mental_models?.slice(0, 3).map((model) => (
                       <span key={model} className="text-xs bg-muted px-2 py-1 rounded">
                         {model}
@@ -321,6 +331,36 @@ const FrameworkManager = () => {
                   placeholder="You are an expert in [framework]. Help users apply this thinking model..."
                   rows={8}
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="cognitive_blueprint" className="flex items-center gap-2">
+                  <Brain className="h-4 w-4" />
+                  Cognitive Blueprint
+                </Label>
+                {formData.cognitive_blueprint ? (
+                  <Textarea
+                    id="cognitive_blueprint"
+                    value={JSON.stringify(formData.cognitive_blueprint, null, 2)}
+                    onChange={(e) => {
+                      try {
+                        const parsed = JSON.parse(e.target.value);
+                        setFormData({ ...formData, cognitive_blueprint: parsed });
+                      } catch {
+                        // Allow typing invalid JSON temporarily
+                      }
+                    }}
+                    rows={12}
+                    className="font-mono text-xs"
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground py-3 px-3 border border-dashed rounded-md">
+                    No blueprint yet. Click the auto-generate button above to create one.
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  The cognitive blueprint defines HOW this framework reasons — its diagnostic patterns, reasoning steps, and heuristics.
+                </p>
               </div>
 
               <div>
