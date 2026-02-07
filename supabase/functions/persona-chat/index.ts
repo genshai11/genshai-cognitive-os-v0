@@ -320,7 +320,7 @@ Only suggest skills for pure computation tasks (no network calls, no file access
     const response = await makeAIChatRequest(
       aiConfig,
       [{ role: "system", content: systemPrompt }, ...messages],
-      true // stream
+      { stream: true, functionName: 'persona-chat' }
     );
 
     if (!response.ok) {
