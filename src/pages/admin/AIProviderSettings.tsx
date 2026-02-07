@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, CheckCircle2, XCircle, ExternalLink, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, ExternalLink, AlertTriangle, Eye, EyeOff, ImageIcon } from 'lucide-react';
 
 type ProviderType = 'lovable' | 'cliproxy' | 'direct';
 type DirectProvider = 'openai' | 'anthropic' | 'google' | 'openrouter';
@@ -18,6 +18,7 @@ interface AISettings {
     cliproxy_url: string;
     cliproxy_enabled: boolean;
     default_chat_model: string;
+    default_image_model: string;
     direct_provider: DirectProvider | '';
     direct_api_key: string; // plaintext in UI, encrypted on save
     direct_api_url: string;
@@ -42,6 +43,7 @@ const FUNCTION_NAMES = [
     { id: 'advisor-chat', label: 'Advisor Chat' },
     { id: 'persona-chat', label: 'Persona Chat' },
     { id: 'book-chat', label: 'Book Chat' },
+    { id: 'generate-image', label: 'Image Generation' },
     { id: 'generate-advisor', label: 'Generate Advisor' },
     { id: 'detect-response-style', label: 'Style Detection' },
     { id: 'memory-manager', label: 'Memory Extraction' },
@@ -55,6 +57,7 @@ export default function AIProviderSettings() {
         cliproxy_url: '',
         cliproxy_enabled: false,
         default_chat_model: 'gemini-2.0-flash-exp',
+        default_image_model: '',
         direct_provider: '',
         direct_api_key: '',
         direct_api_url: '',
@@ -62,6 +65,8 @@ export default function AIProviderSettings() {
     });
 
     const [testing, setTesting] = useState(false);
+    const [testingImage, setTestingImage] = useState(false);
+    const [imageTestResult, setImageTestResult] = useState<'idle' | 'success' | 'error'>('idle');
     const [saving, setSaving] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [loading, setLoading] = useState(true);
@@ -88,6 +93,7 @@ export default function AIProviderSettings() {
                     cliproxy_url: data.cliproxy_url || '',
                     cliproxy_enabled: data.cliproxy_enabled || false,
                     default_chat_model: data.default_chat_model || 'gemini-2.0-flash-exp',
+                    default_image_model: data.default_image_model || '',
                     direct_provider: (data.direct_provider as DirectProvider) || '',
                     direct_api_key: '', // never load encrypted key back
                     direct_api_url: data.direct_api_url || '',
@@ -149,6 +155,7 @@ export default function AIProviderSettings() {
                 cliproxy_url: settings.cliproxy_url,
                 cliproxy_enabled: settings.provider_type === 'cliproxy',
                 default_chat_model: settings.default_chat_model,
+                default_image_model: settings.default_image_model || null,
                 direct_provider: settings.direct_provider || null,
                 direct_api_url: settings.direct_api_url || null,
                 model_overrides: settings.model_overrides,
@@ -193,6 +200,32 @@ export default function AIProviderSettings() {
                     Object.entries(prev.model_overrides).filter(([k]) => k !== functionName)
                 ),
         }));
+    };
+
+    const testImageGeneration = async () => {
+        setTestingImage(true);
+        setImageTestResult('idle');
+        try {
+            const { data, error } = await supabase.functions.invoke('generate-image', {
+                body: { prompt: 'A simple red circle on a white background, minimalist test image' },
+            });
+            if (error) throw error;
+            if (data?.url) {
+                setImageTestResult('success');
+                toast.success('Image generation works! Model can generate images.');
+            } else if (data?.error) {
+                setImageTestResult('error');
+                toast.error(`Image test failed: ${data.error}`);
+            } else {
+                setImageTestResult('error');
+                toast.error('Image test failed: no image returned');
+            }
+        } catch (err: any) {
+            setImageTestResult('error');
+            toast.error(`Image test failed: ${err.message || 'Unknown error'}`);
+        } finally {
+            setTestingImage(false);
+        }
     };
 
     if (loading) {
@@ -449,6 +482,63 @@ export default function AIProviderSettings() {
                 </Alert>
             )}
 
+            {/* Image Model Configuration */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <ImageIcon className="w-5 h-5" />
+                        Image Generation Model
+                    </CardTitle>
+                    <CardDescription>
+                        Configure which model to use for AI image generation. Leave empty to use Lovable Cloud default.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label>Image Model ID</Label>
+                        <Input
+                            value={settings.default_image_model}
+                            onChange={(e) => setSettings({ ...settings, default_image_model: e.target.value })}
+                            placeholder="e.g., google/gemini-2.5-flash-image"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            The model must support image generation with modalities: ["image", "text"].
+                            Examples: google/gemini-2.5-flash-image, google/gemini-3-pro-image-preview
+                        </p>
+                    </div>
+
+                    <Button
+                        onClick={testImageGeneration}
+                        disabled={testingImage}
+                        variant="outline"
+                        className="w-full"
+                    >
+                        {testingImage ? (
+                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing Image Generation...</>
+                        ) : (
+                            <><ImageIcon className="w-4 h-4 mr-2" />Test Image Generation</>
+                        )}
+                    </Button>
+
+                    {imageTestResult === 'success' && (
+                        <Alert>
+                            <CheckCircle2 className="w-4 h-4 text-green-600" />
+                            <AlertDescription className="text-green-600">
+                                Image generation is working! The configured model can generate images.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                    {imageTestResult === 'error' && (
+                        <Alert variant="destructive">
+                            <XCircle className="w-4 h-4" />
+                            <AlertDescription>
+                                Image generation test failed. The model may not support image generation, or there may be a configuration issue. Save settings first, then test again.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                </CardContent>
+            </Card>
+
             {/* Per-Function Model Overrides */}
             <Card>
                 <CardHeader>
@@ -464,7 +554,7 @@ export default function AIProviderSettings() {
                             <Input
                                 value={settings.model_overrides[fn.id] || ''}
                                 onChange={(e) => setModelOverride(fn.id, e.target.value)}
-                                placeholder={`Default: ${settings.default_chat_model}`}
+                                placeholder={fn.id === 'generate-image' ? `Default: ${settings.default_image_model || 'Lovable default'}` : `Default: ${settings.default_chat_model}`}
                                 className="text-sm"
                             />
                         </div>
