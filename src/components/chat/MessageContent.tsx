@@ -6,6 +6,7 @@ import { Copy, Check, Lightbulb, Quote, BookOpen, TrendingUp, AlertTriangle, Che
 import { MermaidBlock } from './MermaidBlock';
 import { ImageBlock } from './ImageBlock';
 import { SkillExecutionBlock } from '../skills/SkillExecutionBlock';
+import { SkillGenerationBlock } from '../skills/SkillGenerationBlock';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -142,11 +143,12 @@ const CALLOUT_PATTERNS: Record<string, { icon: typeof Lightbulb; label: string; 
 // ─── Main Component ─────────────────────────────────────────────
 export const MessageContent = ({ content }: MessageContentProps) => {
   // Extract chart, mermaid, image, and skill-execute blocks from content before markdown rendering
-  const { processedContent, charts, mermaidDiagrams, images, skillExecutions } = useMemo(() => {
+  const { processedContent, charts, mermaidDiagrams, images, skillExecutions, skillGenerations } = useMemo(() => {
     const chartBlocks: ChartData[] = [];
     const mermaidBlocks: { chart: string; title?: string }[] = [];
     const imageBlocks: { prompt: string; caption?: string }[] = [];
     const skillBlocks: { skillId: string; skillName: string; input: any }[] = [];
+    const skillGenBlocks: { skillDescription: string; advisorId: string; context?: string }[] = [];
 
     let processed = content
       // Extract chart blocks
@@ -183,6 +185,16 @@ export const MessageContent = ({ content }: MessageContentProps) => {
         } catch {
           return `\`\`\`\n${json}\`\`\``;
         }
+      })
+      // Extract skill-generate blocks
+      .replace(/```skill-generate\n([\s\S]*?)```/g, (_, json) => {
+        try {
+          const parsed = JSON.parse(json.trim());
+          skillGenBlocks.push(parsed);
+          return `\n<!--skillgen-${skillGenBlocks.length - 1}-->\n`;
+        } catch {
+          return `\`\`\`\n${json}\`\`\``;
+        }
       });
 
     return {
@@ -190,22 +202,21 @@ export const MessageContent = ({ content }: MessageContentProps) => {
       charts: chartBlocks,
       mermaidDiagrams: mermaidBlocks,
       images: imageBlocks,
-      skillExecutions: skillBlocks
+      skillExecutions: skillBlocks,
+      skillGenerations: skillGenBlocks,
     };
   }, [content]);
 
   // Split content by chart, mermaid, image, and skill placeholders and render
   const segments = useMemo(() => {
-    const parts = processedContent.split(/<!--(chart|mermaid|image|skill)-(\d+)-->/);
-    const result: Array<{ type: 'chart' | 'mermaid' | 'image' | 'skill' | 'markdown'; index?: number; content?: string }> = [];
+    const parts = processedContent.split(/<!--(chart|mermaid|image|skill|skillgen)-(\d+)-->/);
+    const result: Array<{ type: 'chart' | 'mermaid' | 'image' | 'skill' | 'skillgen' | 'markdown'; index?: number; content?: string }> = [];
 
     for (let i = 0; i < parts.length; i++) {
       if (i % 3 === 0 && parts[i].trim()) {
-        // Markdown content
         result.push({ type: 'markdown', content: parts[i] });
       } else if (i % 3 === 1) {
-        // Block type (chart, mermaid, image, or skill)
-        const blockType = parts[i] as 'chart' | 'mermaid' | 'image' | 'skill';
+        const blockType = parts[i] as 'chart' | 'mermaid' | 'image' | 'skill' | 'skillgen';
         const index = parseInt(parts[i + 1]);
         result.push({ type: blockType, index });
       }
@@ -228,6 +239,9 @@ export const MessageContent = ({ content }: MessageContentProps) => {
         }
         if (segment.type === 'skill' && segment.index !== undefined && skillExecutions[segment.index]) {
           return <SkillExecutionBlock key={`skill-${i}`} {...skillExecutions[segment.index]} autoExecute={true} />;
+        }
+        if (segment.type === 'skillgen' && segment.index !== undefined && skillGenerations[segment.index]) {
+          return <SkillGenerationBlock key={`skillgen-${i}`} {...skillGenerations[segment.index]} />;
         }
         if (segment.type === 'markdown' && segment.content?.trim()) {
           return (

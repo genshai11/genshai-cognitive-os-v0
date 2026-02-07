@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import {
     Search,
     TrendingUp,
@@ -19,6 +21,8 @@ import {
     AlertCircle,
     Sparkles,
     Loader2,
+    Plus,
+    Wand2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getUserSkills, getSkillStats, approveSkill, rejectSkill } from '@/lib/skills/skill-discovery';
@@ -45,9 +49,20 @@ export function SkillsLibrary() {
     const [modalOpen, setModalOpen] = useState(false);
     const { toast } = useToast();
 
+    // Create Skill dialog state
+    const [createOpen, setCreateOpen] = useState(false);
+    const [newSkillDesc, setNewSkillDesc] = useState('');
+    const [newSkillAdvisor, setNewSkillAdvisor] = useState('');
+    const [advisors, setAdvisors] = useState<{ id: string; name: string }[]>([]);
+    const [isCreating, setIsCreating] = useState(false);
+
     useEffect(() => {
         supabase.auth.getUser().then(({ data }) => {
             setUser(data.user);
+        });
+        // Load advisors for the Create Skill dialog
+        supabase.from('custom_frameworks').select('id, name').eq('is_active', true).then(({ data }) => {
+            if (data) setAdvisors(data.map(f => ({ id: f.id, name: f.name })));
         });
     }, []);
 
@@ -102,6 +117,27 @@ export function SkillsLibrary() {
         loadData();
     };
 
+    const handleCreateSkill = async () => {
+        if (!newSkillDesc.trim() || !newSkillAdvisor) return;
+        setIsCreating(true);
+        try {
+            const { data, error } = await supabase.functions.invoke('skill-generator', {
+                body: { skillDescription: newSkillDesc, advisorId: newSkillAdvisor },
+            });
+            if (error) throw error;
+            if (!data?.success) throw new Error(data?.error || 'Generation failed');
+            toast({ title: '✨ Skill Created!', description: `${data.skill?.skill_name || 'New skill'} is pending review.` });
+            setCreateOpen(false);
+            setNewSkillDesc('');
+            setNewSkillAdvisor('');
+            loadData();
+        } catch (err) {
+            toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to create skill', variant: 'destructive' });
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
     if (!user) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -113,14 +149,65 @@ export function SkillsLibrary() {
     return (
         <div className="container mx-auto px-4 py-8 space-y-6">
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                    <Sparkles className="w-8 h-8 text-primary" />
-                    Skills Library
-                </h1>
-                <p className="text-muted-foreground mt-2">
-                    Manage your AI-generated skills and tools
-                </p>
+            <div className="flex items-start justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold flex items-center gap-2">
+                        <Sparkles className="w-8 h-8 text-primary" />
+                        Skills Library
+                    </h1>
+                    <p className="text-muted-foreground mt-2">
+                        Manage your AI-generated skills and tools
+                    </p>
+                </div>
+                <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Create Skill
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <Wand2 className="w-5 h-5 text-primary" />
+                                Create New Skill
+                            </DialogTitle>
+                            <DialogDescription>
+                                Describe what you want the skill to do and select an advisor to generate it.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-2">
+                            <Textarea
+                                placeholder="e.g. A DCF calculator that takes cash flows and discount rate to compute intrinsic value..."
+                                value={newSkillDesc}
+                                onChange={(e) => setNewSkillDesc(e.target.value)}
+                                rows={4}
+                            />
+                            <Select value={newSkillAdvisor} onValueChange={setNewSkillAdvisor}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select an advisor" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {advisors.map((a) => (
+                                        <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                onClick={handleCreateSkill}
+                                disabled={isCreating || !newSkillDesc.trim() || !newSkillAdvisor}
+                            >
+                                {isCreating ? (
+                                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating...</>
+                                ) : (
+                                    <><Wand2 className="w-4 h-4 mr-2" />Generate Skill</>
+                                )}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
 
             {/* Stats Cards */}
