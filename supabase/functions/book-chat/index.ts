@@ -279,8 +279,29 @@ Deno.serve(async (req) => {
       systemPrompt += `\n\n${buildStyleBlock(profileResult)}`;
       systemPrompt += VISUALIZATION_GUIDE;
       systemPrompt += IMAGE_GENERATION_GUIDE;
+
+      systemPrompt += `
+
+## SKILL GENERATION
+
+When a user asks you to create a reusable tool, calculator, or analysis template, output a skill-generate block:
+
+\`\`\`skill-generate
+{
+  "skillDescription": "A clear description of the skill to create",
+  "advisorId": "${bookId}"
+}
+\`\`\`
+
+**When to suggest a skill:**
+- User asks for a calculator, converter, or formula
+- User wants a reusable analysis template
+- User says "make this a tool" or "save this as a skill"
+- User wants to automate a repeated task
+
+Only suggest skills for pure computation tasks (no network calls, no file access).
+`;
     } else {
-      // If no userId, still apply style and visualization guide
       systemPrompt += `\n\n${buildStyleBlock(profileResult)}`;
       systemPrompt += VISUALIZATION_GUIDE;
       systemPrompt += IMAGE_GENERATION_GUIDE;
