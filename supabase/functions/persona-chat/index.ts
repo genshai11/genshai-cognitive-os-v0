@@ -215,7 +215,7 @@ Deno.serve(async (req) => {
 
     const { data: persona, error: fetchError } = await supabase
       .from("custom_personas")
-      .select("system_prompt, wiki_url, name, response_style, cognitive_blueprint")
+      .select("system_prompt, wiki_url, name, response_style")
       .eq("id", personaId)
       .single();
 
@@ -230,7 +230,7 @@ Deno.serve(async (req) => {
     // Use cognitive blueprint if available, otherwise fall back to flat system_prompt
     let systemPrompt = getSystemPrompt(
       persona.system_prompt,
-      persona.cognitive_blueprint,
+      null,
       persona.name,
       "persona"
     );
@@ -275,7 +275,7 @@ Deno.serve(async (req) => {
     systemPrompt += VISUALIZATION_GUIDE;
     systemPrompt += IMAGE_GENERATION_GUIDE;
 
-    console.log("Persona chat - persona:", personaId, "userId:", userId || "anonymous", "blueprint:", !!persona.cognitive_blueprint);
+    console.log("Persona chat - persona:", personaId, "userId:", userId || "anonymous");
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
