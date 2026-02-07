@@ -1,21 +1,17 @@
 /**
  * Skill Generator Edge Function
- * Generates AI skills using Anthropic's structured outputs
+ * Generates AI skills using OpenAI-compatible tool calling
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import Anthropic from 'https://esm.sh/@anthropic-ai/sdk@0.24.3';
-
-const anthropic = new Anthropic({
-    apiKey: Deno.env.get('ANTHROPIC_API_KEY') || '',
-});
+import { getAIProviderConfig, makeAIChatRequest } from '../_shared/ai-provider.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// JSON Schema for skill definition output
+// JSON Schema for skill definition output (OpenAI function calling format)
 const SKILL_DEFINITION_SCHEMA = {
     type: 'object',
     required: [
@@ -101,12 +97,12 @@ const SYSTEM_PROMPT = `You are an expert AI skill generator. Your job is to crea
 function executeSkill(input) {
   // DCF Calculator: Discounted Cash Flow valuation
   const { cashFlows, discountRate } = input;
-  
+
   // Calculate NPV
   const npv = cashFlows.reduce((sum, cf, i) => {
     return sum + cf / Math.pow(1 + discountRate, i + 1);
   }, 0);
-  
+
   return {
     intrinsicValue: npv,
     discountRate: discountRate,
@@ -120,18 +116,18 @@ function executeSkill(input) {
 function executeSkill(input) {
   // ❌ NO network calls
   const response = await fetch('https://api.example.com');
-  
+
   // ❌ NO Deno APIs
   const file = Deno.readTextFileSync('data.json');
-  
+
   // ❌ NO eval or dynamic code
   eval(input.code);
-  
+
   return result;
 }
 \`\`\`
 
-Generate a skill definition that follows these rules strictly.`;
+Generate a skill definition following these rules strictly. Use the create_skill function to return the result.`;
 
 serve(async (req) => {
     try {
@@ -163,16 +159,19 @@ serve(async (req) => {
             throw new Error('Unauthorized');
         }
 
-        // Generate skill using Anthropic structured outputs
-        const message = await anthropic.messages.create({
-            model: 'claude-3-5-sonnet-20241022',
-            max_tokens: 4096,
-            temperature: 0.7,
-            system: SYSTEM_PROMPT,
-            messages: [
-                {
-                    role: 'user',
-                    content: `Create a custom skill for the following request:
+        // Get AI provider config
+        const aiConfig = await getAIProviderConfig(supabaseUrl, supabaseKey);
+        console.log("Skill generator using provider:", aiConfig.provider, "model:", aiConfig.model);
+
+        // Generate skill using OpenAI-compatible tool calling
+        const response = await makeAIChatRequest(aiConfig, [
+            {
+                role: 'system',
+                content: SYSTEM_PROMPT,
+            },
+            {
+                role: 'user',
+                content: `Create a custom skill for the following request:
 
 **User Request:** ${skillDescription}
 
@@ -181,25 +180,41 @@ serve(async (req) => {
 ${context ? `**Context from conversation:**\n${context}` : ''}
 
 Generate a complete skill definition following all the rules.`
-                }
-            ],
+            }
+        ], {
+            stream: false,
+            max_tokens: 4096,
+            temperature: 0.7,
             tools: [
                 {
-                    name: 'create_skill',
-                    description: 'Create a new AI skill definition',
-                    input_schema: SKILL_DEFINITION_SCHEMA
+                    type: 'function',
+                    function: {
+                        name: 'create_skill',
+                        description: 'Create a new AI skill definition',
+                        parameters: SKILL_DEFINITION_SCHEMA,
+                    }
                 }
             ],
-            tool_choice: { type: 'tool', name: 'create_skill' }
+            tool_choice: { type: 'function', function: { name: 'create_skill' } },
         });
 
-        // Extract skill definition from tool use
-        const toolUse = message.content.find((block: any) => block.type === 'tool_use');
-        if (!toolUse) {
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("AI skill generation error:", response.status, errorText);
+            throw new Error(`AI request failed: ${response.status}`);
+        }
+
+        const aiResult = await response.json();
+
+        // Extract skill definition from tool call response
+        const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
+        if (!toolCall?.function?.arguments) {
             throw new Error('Failed to generate skill definition');
         }
 
-        const skillDef = toolUse.input;
+        const skillDef = typeof toolCall.function.arguments === 'string'
+            ? JSON.parse(toolCall.function.arguments)
+            : toolCall.function.arguments;
 
         // Save to database with pending status
         const { data: skill, error: insertError } = await supabase

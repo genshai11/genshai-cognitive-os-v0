@@ -95,7 +95,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Management Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -143,6 +143,23 @@ const AdminDashboard = () => {
             <CardContent>
               <Link to="/admin/books">
                 <Button className="w-full">Manage Books</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-cyan-500" />
+                AI Provider
+              </CardTitle>
+              <CardDescription>
+                Configure AI provider settings (Lovable/CLIProxyAPI/Direct)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link to="/admin/ai-provider">
+                <Button className="w-full">Configure AI</Button>
               </Link>
             </CardContent>
           </Card>

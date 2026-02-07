@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getSystemPrompt } from "../_shared/blueprint-compiler.ts";
 import { getSkillContext } from "../_shared/skill-discovery.ts";
+import { getAIProviderConfig, makeAIChatRequest } from "../_shared/ai-provider.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -221,9 +222,6 @@ Deno.serve(async (req) => {
   try {
     const { messages, advisorId, userId } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -309,19 +307,16 @@ Only suggest skills for pure computation tasks (no network calls, no file access
 
     console.log("Framework chat - advisor:", advisorId, "userId:", userId || "anonymous", "blueprint:", !!framework.cognitive_blueprint);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [{ role: "system", content: systemPrompt }, ...messages],
-        stream: true,
-        max_tokens: 8192,
-      }),
-    });
+    // Get AI provider configuration (Lovable/CLIProxyAPI/Direct)
+    const aiConfig = await getAIProviderConfig(supabaseUrl, supabaseKey);
+    console.log("Using AI provider:", aiConfig.provider, "model:", aiConfig.model);
+
+    // Make AI chat request with configured provider
+    const response = await makeAIChatRequest(
+      aiConfig,
+      [{ role: "system", content: systemPrompt }, ...messages],
+      true // stream
+    );
 
     if (!response.ok) {
       if (response.status === 429) return new Response(JSON.stringify({ error: "Rate limits exceeded" }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });

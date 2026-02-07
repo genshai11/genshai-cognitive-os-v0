@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { compileCognitiveBlueprint } from "../_shared/blueprint-compiler.ts";
 import type { CognitiveBlueprint } from "../_shared/blueprint-compiler.ts";
+import { getAIProviderConfig, makeAIChatRequest } from "../_shared/ai-provider.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -137,30 +138,20 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const aiConfig = await getAIProviderConfig(supabaseUrl, supabaseKey);
+    console.log("Generate advisor using provider:", aiConfig.provider, "model:", aiConfig.model);
 
     const userPrompt = generatePromptForType(type, input);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
+    const response = await makeAIChatRequest(aiConfig, [
+      {
+        role: "system",
+        content: "You are a JSON generator that creates deeply authentic AI advisor profiles. Always respond with valid JSON only, no markdown, no code blocks, no extra text. Just the raw JSON object. The cognitive_blueprint field must be a valid JSON object (not a string).",
       },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: "You are a JSON generator that creates deeply authentic AI advisor profiles. Always respond with valid JSON only, no markdown, no code blocks, no extra text. Just the raw JSON object. The cognitive_blueprint field must be a valid JSON object (not a string).",
-          },
-          { role: "user", content: userPrompt },
-        ],
-      }),
-    });
+      { role: "user", content: userPrompt },
+    ], { stream: false });
 
     if (!response.ok) {
       if (response.status === 429) {

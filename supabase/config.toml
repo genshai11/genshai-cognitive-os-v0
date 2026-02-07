@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.detect-response-style]
 verify_jwt = false
+
+[functions.test-ai-connection]
+verify_jwt = false

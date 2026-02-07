@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getAIProviderConfig, makeAIChatRequest } from "../_shared/ai-provider.ts";
+import type { AIProviderConfig } from "../_shared/ai-provider.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -95,24 +97,24 @@ function extractBooksFromSearchHtml(html: string): Array<{ title: string; author
   return books.slice(0, 20);
 }
 
-async function extractBookDetails(url: string, apiKey: string): Promise<any> {
+async function extractBookDetails(url: string, aiConfig: AIProviderConfig): Promise<any> {
   try {
     const html = await fetchPage(url);
-    
+
     // Extract key info from page for AI processing
-    const titleMatch = html.match(/<h1[^>]*class="[^"]*Text__title1[^"]*"[^>]*>([\s\S]*?)<\/h1>/i) 
+    const titleMatch = html.match(/<h1[^>]*class="[^"]*Text__title1[^"]*"[^>]*>([\s\S]*?)<\/h1>/i)
       || html.match(/<h1[^>]*id="bookTitle"[^>]*>([\s\S]*?)<\/h1>/i);
     const title = titleMatch ? stripHtml(titleMatch[1]) : "";
-    
+
     const authorMatch = html.match(/<span[^>]*class="[^"]*ContributorLink__name[^"]*"[^>]*>([\s\S]*?)<\/span>/i)
       || html.match(/<a[^>]*class="authorName"[^>]*>([\s\S]*?)<\/a>/i);
     const author = authorMatch ? stripHtml(authorMatch[1]) : "";
-    
+
     // Get description
     const descMatch = html.match(/<div[^>]*class="[^"]*DetailsLayoutRightParagraph[^"]*"[^>]*>([\s\S]*?)<\/div>/i)
       || html.match(/<div[^>]*id="description"[^>]*>([\s\S]*?)<\/div>/i);
     const description = descMatch ? stripHtml(descMatch[1]).slice(0, 1000) : "";
-    
+
     // Get genres
     const genrePattern = /<span[^>]*class="[^"]*BookPageMetadataSection__genreButton[^"]*"[^>]*>[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/gi;
     const genres: string[] = [];
@@ -120,38 +122,30 @@ async function extractBookDetails(url: string, apiKey: string): Promise<any> {
     while ((gMatch = genrePattern.exec(html)) !== null) {
       genres.push(stripHtml(gMatch[1]));
     }
-    
+
     // Get rating
     const ratingMatch = html.match(/<div[^>]*class="[^"]*RatingStatistics__rating[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
     const rating = ratingMatch ? stripHtml(ratingMatch[1]) : "";
-    
+
     // Use AI to generate a complete book advisor profile
     const bookContext = `Title: ${title}\nAuthor: ${author}\nDescription: ${description}\nGenres: ${genres.join(', ')}\nRating: ${rating}\nURL: ${url}`;
-    
+
     console.log("Extracted book context:", bookContext.slice(0, 200));
-    
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
+
+    const aiResponse = await makeAIChatRequest(aiConfig, [
+      {
+        role: "system",
+        content: "You are a JSON generator. Always respond with valid JSON only, no markdown, no code blocks. Just the raw JSON object.",
       },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: "You are a JSON generator. Always respond with valid JSON only, no markdown, no code blocks. Just the raw JSON object.",
-          },
-          {
-            role: "user",
-            content: `Given this book information scraped from Goodreads, generate a complete book advisor profile for an AI chatbot.
+      {
+        role: "user",
+        content: `Given this book information scraped from Goodreads, generate a complete book advisor profile for an AI chatbot.
 
 ${bookContext}
 
 Return a JSON object with these fields:
 - title: The book's full title
-- author: The author's name  
+- author: The author's name
 - description: 1-2 sentence description of the book and its core message
 - cover_emoji: A single emoji that represents the book's theme
 - color: A Tailwind CSS gradient string (e.g., "from-amber-500 to-orange-700")
@@ -162,10 +156,8 @@ Return a JSON object with these fields:
 - wiki_url: "${url}"
 
 Be accurate to the book's actual content and teachings.`,
-          },
-        ],
-      }),
-    });
+      },
+    ], { stream: false });
 
     if (!aiResponse.ok) {
       console.error("AI error:", aiResponse.status);
@@ -179,7 +171,7 @@ Be accurate to the book's actual content and teachings.`,
     if (content.startsWith("```")) {
       content = content.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
     }
-    
+
     return JSON.parse(content);
   } catch (error) {
     console.error("Error extracting book details:", error);
@@ -194,11 +186,6 @@ serve(async (req) => {
 
   try {
     const { action, query, url, category } = await req.json();
-    
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
 
     // Action: list categories
     if (action === "categories") {
@@ -231,7 +218,12 @@ serve(async (req) => {
 
     // Action: import a specific book (from URL or selected result)
     if (action === "import" && url) {
-      const bookData = await extractBookDetails(url, LOVABLE_API_KEY);
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const aiConfig = await getAIProviderConfig(supabaseUrl, supabaseKey);
+      console.log("Goodreads import using provider:", aiConfig.provider);
+
+      const bookData = await extractBookDetails(url, aiConfig);
       
       return new Response(JSON.stringify({ book: bookData }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

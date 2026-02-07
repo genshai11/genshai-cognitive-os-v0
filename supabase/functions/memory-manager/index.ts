@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getAIProviderConfig, makeAIChatRequest } from "../_shared/ai-provider.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -163,61 +164,50 @@ Deno.serve(async (req) => {
         );
       }
 
-      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-      if (!LOVABLE_API_KEY) {
-        return new Response(
-          JSON.stringify({ success: false, error: "AI not configured" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const aiConfig = await getAIProviderConfig(supabaseUrl, supabaseKey);
+      console.log("Extract profile using provider:", aiConfig.provider);
 
       // Extract profile info using AI tool calling
       const conversationText = messages
         .map((m: { role: string; content: string }) => `${m.role}: ${m.content}`)
         .join("\n");
 
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
+      const response = await makeAIChatRequest(aiConfig, [
+        {
+          role: "system",
+          content: "Extract user profile information from the conversation. Only extract what the user explicitly mentions about themselves.",
         },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
-          messages: [
-            {
-              role: "system",
-              content: "Extract user profile information from the conversation. Only extract what the user explicitly mentions about themselves.",
-            },
-            {
-              role: "user",
-              content: `Extract any user profile information from this conversation:\n\n${conversationText}`,
-            },
-          ],
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "update_profile",
-                description: "Update user profile with extracted information",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    display_name: { type: "string", description: "User's name if mentioned" },
-                    goals: { type: "array", items: { type: "string" }, description: "User's goals or objectives" },
-                    challenges: { type: "array", items: { type: "string" }, description: "Challenges user is facing" },
-                    interests: { type: "array", items: { type: "string" }, description: "Topics user is interested in" },
-                    career_stage: { type: "string", description: "Career stage (student, early-career, mid-career, senior, founder, etc.)" },
-                    industry: { type: "string", description: "Industry or field user works in" },
-                  },
-                  required: [],
-                  additionalProperties: false,
+        {
+          role: "user",
+          content: `Extract any user profile information from this conversation:\n\n${conversationText}`,
+        },
+      ], {
+        stream: false,
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "update_profile",
+              description: "Update user profile with extracted information",
+              parameters: {
+                type: "object",
+                properties: {
+                  display_name: { type: "string", description: "User's name if mentioned" },
+                  goals: { type: "array", items: { type: "string" }, description: "User's goals or objectives" },
+                  challenges: { type: "array", items: { type: "string" }, description: "Challenges user is facing" },
+                  interests: { type: "array", items: { type: "string" }, description: "Topics user is interested in" },
+                  career_stage: { type: "string", description: "Career stage (student, early-career, mid-career, senior, founder, etc.)" },
+                  industry: { type: "string", description: "Industry or field user works in" },
                 },
+                required: [],
+                additionalProperties: false,
               },
             },
-          ],
-          tool_choice: { type: "function", function: { name: "update_profile" } },
-        }),
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "update_profile" } },
       });
 
       if (!response.ok) {

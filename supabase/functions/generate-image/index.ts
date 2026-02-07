@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { getLovableConfig, makeAIChatRequest, withModel } from "../_shared/ai-provider.ts";
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -20,32 +21,19 @@ Deno.serve(async (req) => {
             );
         }
 
-        const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-
-        if (!LOVABLE_API_KEY) {
-            console.error("LOVABLE_API_KEY not configured");
-            return new Response(
-                JSON.stringify({ error: "API key not configured" }),
-                { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
-        }
-
         console.log("Generating image with prompt:", prompt);
 
-        // Use Lovable AI Gateway with Gemini image generation model
-        const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                model: "google/gemini-2.5-flash-image",
-                messages: [
-                    { role: "user", content: prompt }
-                ],
-                modalities: ["image", "text"],
-            }),
+        // Image generation always uses Lovable gateway — the google/gemini-2.5-flash-image
+        // model with modalities:["image","text"] is Lovable-gateway-specific and not
+        // available on CLIProxyAPI or direct API endpoints.
+        const lovableConfig = getLovableConfig();
+        const imageConfig = withModel(lovableConfig, lovableConfig.imageModel || 'google/gemini-2.5-flash-image');
+
+        const response = await makeAIChatRequest(imageConfig, [
+            { role: "user", content: prompt }
+        ], {
+            stream: false,
+            modalities: ["image", "text"],
         });
 
         if (!response.ok) {

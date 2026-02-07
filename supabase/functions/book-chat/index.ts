@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getSystemPrompt } from "../_shared/blueprint-compiler.ts";
 import { getSkillContext } from "../_shared/skill-discovery.ts";
+import { getAIProviderConfig, makeAIChatRequest } from "../_shared/ai-provider.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -331,29 +332,18 @@ Only suggest skills for pure computation tasks (no network calls, no file access
       })),
     ];
 
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableApiKey) {
-      return new Response(
-        JSON.stringify({ error: "API key not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     console.log("Book chat - book:", bookId, "userId:", userId || "anonymous", "blueprint:", !!book.cognitive_blueprint);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${lovableApiKey}`,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: apiMessages,
-        stream: true,
-        max_tokens: 8192,
-      }),
-    });
+    // Get AI provider configuration (Lovable/CLIProxyAPI/Direct)
+    const aiConfig = await getAIProviderConfig(supabaseUrl, supabaseKey);
+    console.log("Using AI provider:", aiConfig.provider, "model:", aiConfig.model);
+
+    // Make AI chat request with configured provider
+    const response = await makeAIChatRequest(
+      aiConfig,
+      apiMessages,
+      true // stream
+    );
 
     if (!response.ok) {
       const errorText = await response.text();

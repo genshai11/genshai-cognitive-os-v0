@@ -22,6 +22,7 @@ import PersonaManager from "./pages/admin/PersonaManager";
 import FrameworkManager from "./pages/admin/FrameworkManager";
 import BookManager from "./pages/admin/BookManager";
 import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
+import AIProviderSettings from "./pages/admin/AIProviderSettings";
 import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
@@ -31,30 +32,31 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <ThemeProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/advisors" element={<Advisors />} />
-            <Route path="/chat/:advisorId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-            <Route path="/persona/:personaId" element={<ProtectedRoute><PersonaChat /></ProtectedRoute>} />
-            <Route path="/book/:bookId" element={<ProtectedRoute><BookChat /></ProtectedRoute>} />
-            <Route path="/library" element={<Library />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/skills" element={<ProtectedRoute><Skills /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/admin/personas" element={<AdminRoute><PersonaManager /></AdminRoute>} />
-            <Route path="/admin/frameworks" element={<AdminRoute><FrameworkManager /></AdminRoute>} />
-            <Route path="/admin/books" element={<AdminRoute><BookManager /></AdminRoute>} />
-            <Route path="/admin/analytics" element={<AdminRoute><AnalyticsDashboard /></AdminRoute>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/advisors" element={<Advisors />} />
+              <Route path="/chat/:advisorId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+              <Route path="/persona/:personaId" element={<ProtectedRoute><PersonaChat /></ProtectedRoute>} />
+              <Route path="/book/:bookId" element={<ProtectedRoute><BookChat /></ProtectedRoute>} />
+              <Route path="/library" element={<Library />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/skills" element={<ProtectedRoute><Skills /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/admin/personas" element={<AdminRoute><PersonaManager /></AdminRoute>} />
+              <Route path="/admin/frameworks" element={<AdminRoute><FrameworkManager /></AdminRoute>} />
+              <Route path="/admin/books" element={<AdminRoute><BookManager /></AdminRoute>} />
+              <Route path="/admin/ai-provider" element={<AdminRoute><AIProviderSettings /></AdminRoute>} />
+              <Route path="/admin/analytics" element={<AdminRoute><AnalyticsDashboard /></AdminRoute>} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
         </ThemeProvider>
       </AuthProvider>
     </TooltipProvider>

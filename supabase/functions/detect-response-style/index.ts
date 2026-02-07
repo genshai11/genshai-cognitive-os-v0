@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getAIProviderConfig, makeAIChatRequest } from "../_shared/ai-provider.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,10 +62,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY not configured");
-    }
+    const aiConfig = await getAIProviderConfig(supabaseUrl, supabaseKey);
+    console.log("Style detection using provider:", aiConfig.provider);
 
     // Build analysis prompt
     const analysisPrompt = `Analyze these user messages to detect their preferred communication style.
@@ -83,51 +82,43 @@ ANALYSIS CRITERIA:
 
 Return your analysis using the detect_style function.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: "You are an expert at analyzing communication patterns to detect preferred styles." },
-          { role: "user", content: analysisPrompt },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "detect_style",
-              description: "Report the detected communication style preference",
-              parameters: {
-                type: "object",
-                properties: {
-                  detected_style: {
-                    type: "string",
-                    enum: ["concise", "balanced", "detailed", "socratic", "storytelling"],
-                    description: "The detected preferred style",
-                  },
-                  confidence: {
-                    type: "number",
-                    minimum: 0,
-                    maximum: 1,
-                    description: "Confidence score from 0 to 1",
-                  },
-                  reasoning: {
-                    type: "string",
-                    description: "Brief explanation of why this style was detected",
-                  },
+    const response = await makeAIChatRequest(aiConfig, [
+      { role: "system", content: "You are an expert at analyzing communication patterns to detect preferred styles." },
+      { role: "user", content: analysisPrompt },
+    ], {
+      stream: false,
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "detect_style",
+            description: "Report the detected communication style preference",
+            parameters: {
+              type: "object",
+              properties: {
+                detected_style: {
+                  type: "string",
+                  enum: ["concise", "balanced", "detailed", "socratic", "storytelling"],
+                  description: "The detected preferred style",
                 },
-                required: ["detected_style", "confidence", "reasoning"],
-                additionalProperties: false,
+                confidence: {
+                  type: "number",
+                  minimum: 0,
+                  maximum: 1,
+                  description: "Confidence score from 0 to 1",
+                },
+                reasoning: {
+                  type: "string",
+                  description: "Brief explanation of why this style was detected",
+                },
               },
+              required: ["detected_style", "confidence", "reasoning"],
+              additionalProperties: false,
             },
           },
-        ],
-        tool_choice: { type: "function", function: { name: "detect_style" } },
-      }),
+        },
+      ],
+      tool_choice: { type: "function", function: { name: "detect_style" } },
     });
 
     if (!response.ok) {
