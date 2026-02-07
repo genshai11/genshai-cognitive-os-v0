@@ -21,7 +21,7 @@ interface Persona {
   avatar: string | null;
   color: string | null;
   system_prompt: string;
-  cognitive_blueprint: Record<string, any> | null;
+  cognitive_blueprint?: any;
   response_style: string | null;
   tags: string[] | null;
   wiki_url: string | null;

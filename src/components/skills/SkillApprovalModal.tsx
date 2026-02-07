@@ -288,16 +288,16 @@ export function SkillApprovalModal({
                         variant="destructive"
                         onClick={handleReject}
                         disabled={isApproving || isRejecting}
-                        loading={isRejecting}
                     >
+                        {isRejecting && <span className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />}
                         <XCircle className="w-4 h-4 mr-2" />
                         Reject
                     </Button>
                     <Button
                         onClick={handleApprove}
                         disabled={!analysis.safe || isApproving || isRejecting}
-                        loading={isApproving}
                     >
+                        {isApproving && <span className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />}
                         <CheckCircle2 className="w-4 h-4 mr-2" />
                         Approve & Use
                     </Button>

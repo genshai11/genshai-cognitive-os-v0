@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      advisor_skills: {
+        Row: {
+          advisor_id: string
+          category: string
+          code: string
+          created_at: string
+          description: string
+          examples: Json
+          id: string
+          input_schema: Json
+          language: string
+          last_used_at: string | null
+          mental_model: string | null
+          output_schema: Json
+          skill_id: string
+          skill_name: string
+          status: string
+          times_used: number
+          updated_at: string
+          use_cases: string[]
+          user_id: string
+        }
+        Insert: {
+          advisor_id: string
+          category: string
+          code: string
+          created_at?: string
+          description: string
+          examples?: Json
+          id?: string
+          input_schema?: Json
+          language?: string
+          last_used_at?: string | null
+          mental_model?: string | null
+          output_schema?: Json
+          skill_id: string
+          skill_name: string
+          status?: string
+          times_used?: number
+          updated_at?: string
+          use_cases?: string[]
+          user_id: string
+        }
+        Update: {
+          advisor_id?: string
+          category?: string
+          code?: string
+          created_at?: string
+          description?: string
+          examples?: Json
+          id?: string
+          input_schema?: Json
+          language?: string
+          last_used_at?: string | null
+          mental_model?: string | null
+          output_schema?: Json
+          skill_id?: string
+          skill_name?: string
+          status?: string
+          times_used?: number
+          updated_at?: string
+          use_cases?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           advisor_id: string
@@ -259,6 +325,97 @@ export type Database = {
         }
         Relationships: []
       }
+      skill_executions: {
+        Row: {
+          cached: boolean
+          conversation_id: string | null
+          created_at: string
+          error_message: string | null
+          execution_time_ms: number | null
+          id: string
+          input: Json | null
+          output: Json | null
+          skill_id: string
+          success: boolean
+          user_id: string
+        }
+        Insert: {
+          cached?: boolean
+          conversation_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          input?: Json | null
+          output?: Json | null
+          skill_id: string
+          success?: boolean
+          user_id: string
+        }
+        Update: {
+          cached?: boolean
+          conversation_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          input?: Json | null
+          output?: Json | null
+          skill_id?: string
+          success?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_executions_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skill_versions: {
+        Row: {
+          change_summary: string | null
+          code: string
+          created_at: string
+          id: string
+          input_schema: Json
+          output_schema: Json
+          skill_id: string
+          version: number
+        }
+        Insert: {
+          change_summary?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          input_schema?: Json
+          output_schema?: Json
+          skill_id: string
+          version?: number
+        }
+        Update: {
+          change_summary?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          input_schema?: Json
+          output_schema?: Json
+          skill_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_versions_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "advisor_skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_interests: {
         Row: {
           advisor_id: string
@@ -393,6 +550,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_skill_usage: {
+        Args: { p_skill_id: string }
+        Returns: undefined
       }
     }
     Enums: {
