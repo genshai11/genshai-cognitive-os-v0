@@ -3,13 +3,14 @@ import { Header } from "@/components/layout/Header";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, User, MessageSquare, Sliders, Shield } from "lucide-react";
+import { Loader2, User, MessageSquare, Sliders, Shield, Palette } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileInfoTab } from "@/components/settings/ProfileInfoTab";
 import { ResponseStyleTab } from "@/components/settings/ResponseStyleTab";
 import { CommunicationTab } from "@/components/settings/CommunicationTab";
 import { PrivacyTab } from "@/components/settings/PrivacyTab";
 import { ProfileCompletion } from "@/components/settings/ProfileCompletion";
+import { AppearanceTab } from "@/components/settings/AppearanceTab";
 
 export interface UserProfile {
   display_name: string | null;
@@ -155,9 +156,12 @@ const Settings = () => {
         <ProfileCompletion profile={profile} />
 
         <Tabs defaultValue="profile" className="mt-6">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="profile" className="gap-1.5 text-xs sm:text-sm">
               <User className="w-4 h-4 hidden sm:block" /> Profile
+            </TabsTrigger>
+            <TabsTrigger value="appearance" className="gap-1.5 text-xs sm:text-sm">
+              <Palette className="w-4 h-4 hidden sm:block" /> Theme
             </TabsTrigger>
             <TabsTrigger value="style" className="gap-1.5 text-xs sm:text-sm">
               <MessageSquare className="w-4 h-4 hidden sm:block" /> Style
@@ -172,6 +176,9 @@ const Settings = () => {
 
           <TabsContent value="profile">
             <ProfileInfoTab profile={profile} updateField={updateField} />
+          </TabsContent>
+          <TabsContent value="appearance">
+            <AppearanceTab />
           </TabsContent>
           <TabsContent value="style">
             <ResponseStyleTab profile={profile} updateField={updateField} />

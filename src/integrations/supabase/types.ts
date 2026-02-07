@@ -310,6 +310,7 @@ export type Database = {
           learning_style: string | null
           onboarding_completed: boolean | null
           preferred_response_style: string | null
+          preferred_theme: string | null
           updated_at: string
           user_id: string
           values: string[] | null
@@ -331,6 +332,7 @@ export type Database = {
           learning_style?: string | null
           onboarding_completed?: boolean | null
           preferred_response_style?: string | null
+          preferred_theme?: string | null
           updated_at?: string
           user_id: string
           values?: string[] | null
@@ -352,6 +354,7 @@ export type Database = {
           learning_style?: string | null
           onboarding_completed?: boolean | null
           preferred_response_style?: string | null
+          preferred_theme?: string | null
           updated_at?: string
           user_id?: string
           values?: string[] | null
