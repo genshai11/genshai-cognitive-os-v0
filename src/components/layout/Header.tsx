@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Brain, Menu, LogIn, LogOut, User, History as HistoryIcon, Settings } from 'lucide-react';
+import { Brain, Menu, LogIn, LogOut, User, History as HistoryIcon, Settings, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/hooks/useAuth';
@@ -23,7 +23,7 @@ export const Header = () => {
   const location = useLocation();
 
   const allNavItems = user 
-    ? [...navItems, { label: 'History', href: '/history' }] 
+    ? [...navItems, { label: 'Skills', href: '/skills' }, { label: 'History', href: '/history' }] 
     : navItems;
 
   return (
@@ -61,6 +61,12 @@ export const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+                  <Link to="/skills">
+                    <Sparkles className="w-4 h-4" />
+                    Skills
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild className="gap-2 cursor-pointer">
                   <Link to="/history">
                     <HistoryIcon className="w-4 h-4" />

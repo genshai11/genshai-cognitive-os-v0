@@ -14,6 +14,7 @@ import PersonaChat from "./pages/PersonaChat";
 import BookChat from "./pages/BookChat";
 import Library from "./pages/Library";
 import History from "./pages/History";
+import Skills from "./pages/Skills";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/book/:bookId" element={<ProtectedRoute><BookChat /></ProtectedRoute>} />
             <Route path="/library" element={<Library />} />
             <Route path="/history" element={<History />} />
+            <Route path="/skills" element={<ProtectedRoute><Skills /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
