@@ -239,9 +239,28 @@ export async function makeAIChatRequest(
         : optionsOrStream;
 
     // Apply per-function model override if functionName provided
+    // BUT only if the override model is compatible with the current provider
     let effectiveConfig = config;
     if (options.functionName) {
-        effectiveConfig = withFunctionOverride(config, options.functionName);
+        const override = config.modelOverrides?.[options.functionName];
+        if (override) {
+            // Skip OpenRouter-style overrides (containing '/') when using Lovable provider
+            const isOpenRouterModel = override.includes('/');
+            const isLovable = config.provider === 'lovable';
+            if (!isLovable || isOpenRouterModel) {
+                // For Lovable, only apply if it's a known Lovable model format
+                if (isLovable) {
+                    const lovableModels = ['google/gemini-', 'openai/gpt-'];
+                    const isValidLovable = lovableModels.some(prefix => override.startsWith(prefix)) && !override.includes(':free');
+                    if (isValidLovable) {
+                        effectiveConfig = { ...config, model: override };
+                    }
+                    // else skip the override silently
+                } else {
+                    effectiveConfig = withFunctionOverride(config, options.functionName);
+                }
+            }
+        }
     }
 
     const {
