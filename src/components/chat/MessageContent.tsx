@@ -3,6 +3,8 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Copy, Check, Lightbulb, Quote, BookOpen, TrendingUp, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { MermaidBlock } from './MermaidBlock';
+import { ImageBlock } from './ImageBlock';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -138,38 +140,78 @@ const CALLOUT_PATTERNS: Record<string, { icon: typeof Lightbulb; label: string; 
 
 // ─── Main Component ─────────────────────────────────────────────
 export const MessageContent = ({ content }: MessageContentProps) => {
-  // Extract chart blocks from content before markdown rendering
-  const { processedContent, charts } = useMemo(() => {
+  // Extract chart, mermaid, and image blocks from content before markdown rendering
+  const { processedContent, charts, mermaidDiagrams, images } = useMemo(() => {
     const chartBlocks: ChartData[] = [];
-    const processed = content.replace(/```chart\n([\s\S]*?)```/g, (_, json) => {
-      try {
-        const parsed = JSON.parse(json.trim());
-        chartBlocks.push(parsed);
-        return `\n<!--chart-${chartBlocks.length - 1}-->\n`;
-      } catch {
-        return `\`\`\`\n${json}\`\`\``;
-      }
-    });
-    return { processedContent: processed, charts: chartBlocks };
+    const mermaidBlocks: { chart: string; title?: string }[] = [];
+    const imageBlocks: { prompt: string; caption?: string }[] = [];
+
+    let processed = content
+      // Extract chart blocks
+      .replace(/```chart\n([\s\S]*?)```/g, (_, json) => {
+        try {
+          const parsed = JSON.parse(json.trim());
+          chartBlocks.push(parsed);
+          return `\n<!--chart-${chartBlocks.length - 1}-->\n`;
+        } catch {
+          return `\`\`\`\n${json}\`\`\``;
+        }
+      })
+      // Extract mermaid blocks
+      .replace(/```mermaid\n([\s\S]*?)```/g, (_, diagram) => {
+        mermaidBlocks.push({ chart: diagram.trim() });
+        return `\n<!--mermaid-${mermaidBlocks.length - 1}-->\n`;
+      })
+      // Extract image blocks
+      .replace(/```image\n([\s\S]*?)```/g, (_, json) => {
+        try {
+          const parsed = JSON.parse(json.trim());
+          imageBlocks.push(parsed);
+          return `\n<!--image-${imageBlocks.length - 1}-->\n`;
+        } catch {
+          return `\`\`\`\n${json}\`\`\``;
+        }
+      });
+
+    return {
+      processedContent: processed,
+      charts: chartBlocks,
+      mermaidDiagrams: mermaidBlocks,
+      images: imageBlocks
+    };
   }, [content]);
 
-  // Split content by chart placeholders and render
+  // Split content by chart, mermaid, and image placeholders and render
   const segments = useMemo(() => {
-    const parts = processedContent.split(/<!--chart-(\d+)-->/);
-    return parts.map((part, i) => {
-      if (i % 2 === 1) {
-        const chartIndex = parseInt(part);
-        return { type: 'chart' as const, index: chartIndex };
+    const parts = processedContent.split(/<!--(chart|mermaid|image)-(\d+)-->/);
+    const result: Array<{ type: 'chart' | 'mermaid' | 'image' | 'markdown'; index?: number; content?: string }> = [];
+
+    for (let i = 0; i < parts.length; i++) {
+      if (i % 3 === 0 && parts[i].trim()) {
+        // Markdown content
+        result.push({ type: 'markdown', content: parts[i] });
+      } else if (i % 3 === 1) {
+        // Block type (chart, mermaid, or image)
+        const blockType = parts[i] as 'chart' | 'mermaid' | 'image';
+        const index = parseInt(parts[i + 1]);
+        result.push({ type: blockType, index });
       }
-      return { type: 'markdown' as const, content: part };
-    });
+    }
+
+    return result;
   }, [processedContent]);
 
   return (
     <div className="space-y-1">
       {segments.map((segment, i) => {
-        if (segment.type === 'chart' && charts[segment.index]) {
+        if (segment.type === 'chart' && segment.index !== undefined && charts[segment.index]) {
           return <ChartBlock key={`chart-${i}`} config={charts[segment.index]} />;
+        }
+        if (segment.type === 'mermaid' && segment.index !== undefined && mermaidDiagrams[segment.index]) {
+          return <MermaidBlock key={`mermaid-${i}`} {...mermaidDiagrams[segment.index]} />;
+        }
+        if (segment.type === 'image' && segment.index !== undefined && images[segment.index]) {
+          return <ImageBlock key={`image-${i}`} {...images[segment.index]} />;
         }
         if (segment.type === 'markdown' && segment.content?.trim()) {
           return (

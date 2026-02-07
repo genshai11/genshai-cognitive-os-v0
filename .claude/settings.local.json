@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(npx vite build)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(supabase:*)",
+      "Bash(npx supabase:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd cognitive blueprint system for advisor brain architecture\n\nReplace flat 200-400 word system prompts with structured cognitive blueprints\nthat define HOW advisors think, not just WHAT they know. Each blueprint has:\nworldview \\(core axioms\\), diagnostic patterns \\(signature questions\\), reasoning\nchains \\(step-by-step thinking\\), emotional stance, anti-patterns, and language DNA.\n\n- Add cognitive_blueprint JSONB column to all 3 advisor tables\n- Create shared blueprint compiler that converts JSON to system prompts\n- Update generate-advisor to produce blueprints with each new advisor\n- Update all chat functions to use compiled blueprints \\(with fallback\\)\n- Add blueprint editor and indicators to all admin manager UIs\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git stash:*)",
+      "Bash(git pull:*)",
+      "WebFetch(domain:docs.openclaw.ai)",
+      "WebFetch(domain:deepwiki.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:openrouter.ai)"
+    ]
+  }
+}

@@ -36,6 +36,91 @@ const EMOJI_INSTRUCTIONS: Record<string, string> = {
   frequent: "EMOJI: Use emoji frequently to make responses lively and expressive.",
 };
 
+const VISUALIZATION_GUIDE = `
+
+## VISUALIZATION CAPABILITIES
+
+You can create visual diagrams using Mermaid syntax to explain complex concepts:
+
+**Flowcharts** (decision trees, processes):
+\`\`\`mermaid
+graph TD
+    A[Start] --> B{Decision?}
+    B -->|Yes| C[Action 1]
+    B -->|No| D[Action 2]
+    C --> E[End]
+    D --> E
+\`\`\`
+
+**Sequence Diagrams** (interactions, workflows):
+\`\`\`mermaid
+sequenceDiagram
+    User->>System: Request
+    System->>Database: Query
+    Database-->>System: Data
+    System-->>User: Response
+\`\`\`
+
+**Mind Maps** (concept relationships):
+\`\`\`mermaid
+mindmap
+  root((Main Idea))
+    Concept 1
+      Detail A
+      Detail B
+    Concept 2
+      Detail C
+\`\`\`
+
+**Use diagrams when explaining:**
+- Complex workflows or decision processes
+- System architecture or relationships
+- Step-by-step procedures
+- Concept hierarchies
+- Comparisons or alternatives
+
+Keep diagrams simple and focused. Use clear labels.
+`;
+
+const IMAGE_GENERATION_GUIDE = `
+
+## IMAGE GENERATION
+
+You can generate AI images to illustrate concepts visually:
+
+\`\`\`image
+{
+  "prompt": "A serene Japanese garden with a koi pond, representing mental clarity and peace, minimalist illustration style",
+  "caption": "Your mind can be like this garden - organized, peaceful, and beautiful"
+}
+\`\`\`
+
+**When to use images:**
+- Illustrating abstract concepts or metaphors
+- Visual scenarios or environments
+- Comparisons (before/after, A vs B)
+- Emotional states or moods
+- Conceptual frameworks
+
+**Prompt guidelines:**
+- Be specific and descriptive
+- Include artistic style (e.g., "minimalist illustration", "watercolor", "photorealistic")
+- Mention mood/atmosphere
+- Keep it relevant to the conversation
+- Avoid text in images
+
+**Example:**
+User: "I feel overwhelmed with tasks"
+\`\`\`image
+{
+  "prompt": "A calm person organizing colorful sticky notes on a wall into clear categories, soft lighting, minimalist illustration style",
+  "caption": "Breaking down overwhelming tasks into organized categories"
+}
+\`\`\`
+
+Use images sparingly - only when they truly enhance understanding.
+`;
+
 interface ProfileResult {
   context: string;
   style: string | null;
@@ -173,6 +258,8 @@ Deno.serve(async (req) => {
     }
 
     systemPrompt += `\n\n${buildStyleBlock(profileResult)}`;
+    systemPrompt += VISUALIZATION_GUIDE;
+    systemPrompt += IMAGE_GENERATION_GUIDE;
 
     console.log("Framework chat - advisor:", advisorId, "userId:", userId || "anonymous", "blueprint:", !!framework.cognitive_blueprint);
 
