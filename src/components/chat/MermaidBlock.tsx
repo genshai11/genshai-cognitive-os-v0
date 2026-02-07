@@ -18,65 +18,96 @@ export const MermaidBlock = ({ chart, title }: MermaidBlockProps) => {
             if (!ref.current) return;
 
             try {
-                // Initialize mermaid with improved vibrant dark theme
+                // Force re-initialize mermaid with vibrant theme (fixes caching)
+                // Using 'base' theme instead of 'dark' to have better control over colors
                 mermaid.initialize({
                     startOnLoad: false,
-                    theme: 'dark',
+                    theme: 'base',
                     themeVariables: {
-                        // Primary: Vibrant Amber/Gold
-                        primaryColor: 'hsl(45, 95%, 60%)',
-                        primaryTextColor: 'hsl(220, 15%, 10%)',
-                        primaryBorderColor: 'hsl(45, 90%, 50%)',
+                        // Primary nodes: Vibrant Amber/Gold with DARK text
+                        primaryColor: '#FCD34D',  // Bright amber
+                        primaryTextColor: '#1F2937',  // Dark gray text
+                        primaryBorderColor: '#F59E0B',  // Darker amber border
 
-                        // Secondary: Bright Cyan
-                        secondaryColor: 'hsl(190, 85%, 55%)',
-                        secondaryTextColor: 'hsl(220, 15%, 10%)',
-                        secondaryBorderColor: 'hsl(190, 80%, 45%)',
+                        // Secondary nodes: Bright Cyan with DARK text
+                        secondaryColor: '#22D3EE',  // Bright cyan
+                        secondaryTextColor: '#1F2937',  // Dark gray text
+                        secondaryBorderColor: '#0891B2',  // Darker cyan border
 
-                        // Tertiary: Vibrant Emerald
-                        tertiaryColor: 'hsl(160, 75%, 50%)',
-                        tertiaryTextColor: 'hsl(220, 15%, 10%)',
-                        tertiaryBorderColor: 'hsl(160, 70%, 40%)',
+                        // Tertiary nodes: Vibrant Emerald with DARK text
+                        tertiaryColor: '#34D399',  // Bright emerald
+                        tertiaryTextColor: '#1F2937',  // Dark gray text
+                        tertiaryBorderColor: '#059669',  // Darker emerald border
 
-                        // Lines and connections
-                        lineColor: 'hsl(210, 50%, 65%)',
+                        // Lines and connections - bright blue
+                        lineColor: '#60A5FA',
 
-                        // Backgrounds
-                        background: 'hsl(220, 16%, 14%)',
-                        mainBkg: 'hsl(220, 16%, 20%)',
-                        secondBkg: 'hsl(220, 16%, 24%)',
-                        tertiaryBkg: 'hsl(220, 16%, 18%)',
+                        // Backgrounds - dark theme
+                        background: '#1F2937',
+                        mainBkg: '#374151',
+                        secondBkg: '#4B5563',
+                        tertiaryBkg: '#374151',
 
-                        // Text and borders
-                        textColor: 'hsl(40, 20%, 96%)',
-                        border1: 'hsl(220, 20%, 40%)',
-                        border2: 'hsl(220, 20%, 35%)',
+                        // Default text - light for dark backgrounds
+                        textColor: '#F3F4F6',
 
-                        // Additional colors for better variety
-                        noteBkgColor: 'hsl(45, 95%, 60%)',
-                        noteTextColor: 'hsl(220, 15%, 10%)',
-                        noteBorderColor: 'hsl(45, 90%, 50%)',
+                        // Borders - visible
+                        border1: '#6B7280',
+                        border2: '#9CA3AF',
 
-                        // Class diagram colors
-                        classText: 'hsl(40, 20%, 96%)',
+                        // Notes: Amber with dark text
+                        noteBkgColor: '#FCD34D',
+                        noteTextColor: '#1F2937',
+                        noteBorderColor: '#F59E0B',
 
-                        // State diagram colors
-                        labelColor: 'hsl(40, 20%, 96%)',
+                        // Class diagrams
+                        classText: '#1F2937',
 
-                        // Flowchart specific
-                        edgeLabelBackground: 'hsl(220, 16%, 20%)',
-                        clusterBkg: 'hsl(220, 16%, 16%)',
-                        clusterBorder: 'hsl(220, 20%, 40%)',
+                        // Labels
+                        labelColor: '#F3F4F6',
+                        labelTextColor: '#1F2937',
+                        labelBoxBkgColor: '#FCD34D',
+                        labelBoxBorderColor: '#F59E0B',
 
-                        // Git graph colors
-                        git0: 'hsl(45, 95%, 60%)',
-                        git1: 'hsl(190, 85%, 55%)',
-                        git2: 'hsl(160, 75%, 50%)',
-                        git3: 'hsl(280, 70%, 60%)',
-                        git4: 'hsl(340, 75%, 60%)',
-                        git5: 'hsl(30, 85%, 60%)',
-                        git6: 'hsl(120, 70%, 55%)',
-                        git7: 'hsl(200, 80%, 60%)',
+                        // Flowchart
+                        edgeLabelBackground: '#374151',
+                        clusterBkg: '#1F2937',
+                        clusterBorder: '#6B7280',
+                        defaultLinkColor: '#60A5FA',
+
+                        // Actor colors (sequence diagrams)
+                        actorBkg: '#FCD34D',
+                        actorBorder: '#F59E0B',
+                        actorTextColor: '#1F2937',
+                        actorLineColor: '#9CA3AF',
+
+                        // Signal colors
+                        signalColor: '#F3F4F6',
+                        signalTextColor: '#F3F4F6',
+
+                        // Git graph - vibrant colors
+                        git0: '#FCD34D',  // Amber
+                        git1: '#22D3EE',  // Cyan
+                        git2: '#34D399',  // Emerald
+                        git3: '#A78BFA',  // Purple
+                        git4: '#FB7185',  // Rose
+                        git5: '#FB923C',  // Orange
+                        git6: '#4ADE80',  // Green
+                        git7: '#38BDF8',  // Sky blue
+
+                        // Pie chart
+                        pie1: '#FCD34D',
+                        pie2: '#22D3EE',
+                        pie3: '#34D399',
+                        pie4: '#A78BFA',
+                        pie5: '#FB7185',
+                        pie6: '#FB923C',
+                        pie7: '#4ADE80',
+                        pie8: '#38BDF8',
+                        pie9: '#F472B6',
+                        pie10: '#FBBF24',
+                        pie11: '#10B981',
+                        pie12: '#3B82F6',
                     },
                 });
 
