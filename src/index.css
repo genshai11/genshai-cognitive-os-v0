@@ -115,6 +115,15 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', serif;
   }
+
+  [data-heading-family="sans"] h1,
+  [data-heading-family="sans"] h2,
+  [data-heading-family="sans"] h3,
+  [data-heading-family="sans"] h4,
+  [data-heading-family="sans"] h5,
+  [data-heading-family="sans"] h6 {
+    font-family: 'Inter', sans-serif;
+  }
 }
 
 @layer utilities {
