@@ -18,24 +18,65 @@ export const MermaidBlock = ({ chart, title }: MermaidBlockProps) => {
             if (!ref.current) return;
 
             try {
-                // Initialize mermaid with dark theme
+                // Initialize mermaid with improved vibrant dark theme
                 mermaid.initialize({
                     startOnLoad: false,
                     theme: 'dark',
                     themeVariables: {
-                        primaryColor: 'hsl(38, 85%, 55%)',
-                        primaryTextColor: '#fff',
-                        primaryBorderColor: 'hsl(38, 85%, 45%)',
-                        lineColor: 'hsl(220, 10%, 55%)',
-                        secondaryColor: 'hsl(200, 70%, 55%)',
-                        tertiaryColor: 'hsl(150, 60%, 45%)',
-                        background: 'hsl(220, 14%, 13%)',
-                        mainBkg: 'hsl(220, 14%, 18%)',
-                        secondBkg: 'hsl(220, 14%, 22%)',
-                        tertiaryBkg: 'hsl(220, 14%, 16%)',
-                        textColor: 'hsl(40, 15%, 95%)',
-                        border1: 'hsl(220, 12%, 30%)',
-                        border2: 'hsl(220, 12%, 25%)',
+                        // Primary: Vibrant Amber/Gold
+                        primaryColor: 'hsl(45, 95%, 60%)',
+                        primaryTextColor: 'hsl(220, 15%, 10%)',
+                        primaryBorderColor: 'hsl(45, 90%, 50%)',
+
+                        // Secondary: Bright Cyan
+                        secondaryColor: 'hsl(190, 85%, 55%)',
+                        secondaryTextColor: 'hsl(220, 15%, 10%)',
+                        secondaryBorderColor: 'hsl(190, 80%, 45%)',
+
+                        // Tertiary: Vibrant Emerald
+                        tertiaryColor: 'hsl(160, 75%, 50%)',
+                        tertiaryTextColor: 'hsl(220, 15%, 10%)',
+                        tertiaryBorderColor: 'hsl(160, 70%, 40%)',
+
+                        // Lines and connections
+                        lineColor: 'hsl(210, 50%, 65%)',
+
+                        // Backgrounds
+                        background: 'hsl(220, 16%, 14%)',
+                        mainBkg: 'hsl(220, 16%, 20%)',
+                        secondBkg: 'hsl(220, 16%, 24%)',
+                        tertiaryBkg: 'hsl(220, 16%, 18%)',
+
+                        // Text and borders
+                        textColor: 'hsl(40, 20%, 96%)',
+                        border1: 'hsl(220, 20%, 40%)',
+                        border2: 'hsl(220, 20%, 35%)',
+
+                        // Additional colors for better variety
+                        noteBkgColor: 'hsl(45, 95%, 60%)',
+                        noteTextColor: 'hsl(220, 15%, 10%)',
+                        noteBorderColor: 'hsl(45, 90%, 50%)',
+
+                        // Class diagram colors
+                        classText: 'hsl(40, 20%, 96%)',
+
+                        // State diagram colors
+                        labelColor: 'hsl(40, 20%, 96%)',
+
+                        // Flowchart specific
+                        edgeLabelBackground: 'hsl(220, 16%, 20%)',
+                        clusterBkg: 'hsl(220, 16%, 16%)',
+                        clusterBorder: 'hsl(220, 20%, 40%)',
+
+                        // Git graph colors
+                        git0: 'hsl(45, 95%, 60%)',
+                        git1: 'hsl(190, 85%, 55%)',
+                        git2: 'hsl(160, 75%, 50%)',
+                        git3: 'hsl(280, 70%, 60%)',
+                        git4: 'hsl(340, 75%, 60%)',
+                        git5: 'hsl(30, 85%, 60%)',
+                        git6: 'hsl(120, 70%, 55%)',
+                        git7: 'hsl(200, 80%, 60%)',
                     },
                 });
 
