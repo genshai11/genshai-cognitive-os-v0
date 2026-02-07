@@ -231,6 +231,58 @@ export default function AIProviderSettings() {
         }
     };
 
+    const testDirectConnection = async () => {
+        setTesting(true);
+        setConnectionStatus('idle');
+
+        try {
+            // Map provider to API URL
+            const providerUrls: Record<string, string> = {
+                openai: 'https://api.openai.com/v1/chat/completions',
+                anthropic: 'https://api.anthropic.com/v1/messages',
+                google: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+                openrouter: 'https://openrouter.ai/api/v1/chat/completions',
+                megallm: 'https://ai.megallm.io/v1/chat/completions',
+                cometapi: 'https://api.cometapi.com/v1/chat/completions',
+                agentrouter: 'https://agentrouter.org/v1/chat/completions',
+            };
+
+            const apiUrl = settings.direct_api_url || providerUrls[settings.direct_provider];
+
+            if (!apiUrl) {
+                throw new Error('No API URL configured for this provider');
+            }
+
+            // Test with a simple completion request
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${settings.direct_api_key}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    model: settings.default_chat_model,
+                    messages: [{ role: 'user', content: 'Say "test successful" if you can read this.' }],
+                    max_tokens: 10,
+                }),
+            });
+
+            if (response.ok) {
+                setConnectionStatus('success');
+                toast.success('Connection test successful!');
+            } else {
+                const errorData = await response.json().catch(() => ({ error: response.statusText }));
+                setConnectionStatus('error');
+                toast.error(`Connection failed: ${errorData.error || response.statusText}`);
+            }
+        } catch (err: any) {
+            setConnectionStatus('error');
+            toast.error(`Connection test failed: ${err.message || 'Unknown error'}`);
+        } finally {
+            setTesting(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center p-8">
@@ -471,6 +523,37 @@ export default function AIProviderSettings() {
                                 Override the API endpoint. Useful for proxies or self-hosted models.
                             </p>
                         </div>
+
+                        {/* Test Connection Button */}
+                        <Button
+                            onClick={testDirectConnection}
+                            disabled={testing || !settings.direct_provider || !settings.direct_api_key}
+                            variant="outline"
+                            className="w-full"
+                        >
+                            {testing ? (
+                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Testing Connection...</>
+                            ) : (
+                                <>Test Connection</>
+                            )}
+                        </Button>
+
+                        {connectionStatus === 'success' && (
+                            <Alert>
+                                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                <AlertDescription className="text-green-600">
+                                    Connection successful! Provider is working correctly.
+                                </AlertDescription>
+                            </Alert>
+                        )}
+                        {connectionStatus === 'error' && (
+                            <Alert variant="destructive">
+                                <XCircle className="w-4 h-4" />
+                                <AlertDescription>
+                                    Connection failed. Please check your API key and provider settings.
+                                </AlertDescription>
+                            </Alert>
+                        )}
                     </CardContent>
                 </Card>
             )}

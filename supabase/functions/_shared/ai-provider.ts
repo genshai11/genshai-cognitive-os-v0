@@ -30,7 +30,7 @@ const DIRECT_PROVIDER_URLS: Record<string, string> = {
     openrouter: 'https://openrouter.ai/api/v1/chat/completions',
     megallm: 'https://ai.megallm.io/v1/chat/completions',
     cometapi: 'https://api.cometapi.com/v1/chat/completions',
-    agentrouter: 'https://agentrouter.org/api/v1/chat/completions',
+    agentrouter: 'https://agentrouter.org/v1/chat/completions',
 };
 
 // Default models per direct provider
