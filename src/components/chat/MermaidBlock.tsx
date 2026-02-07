@@ -60,7 +60,15 @@ export const MermaidBlock = ({ chart, title }: MermaidBlockProps) => {
     if (error) {
         return (
             <div className="my-5 p-4 rounded-xl border border-destructive/40 bg-destructive/5">
-                <p className="text-sm text-destructive">Failed to render diagram</p>
+                <p className="text-sm text-destructive mb-2">Failed to render diagram</p>
+                <details className="text-xs">
+                    <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                        View source
+                    </summary>
+                    <pre className="mt-2 p-2 bg-background rounded overflow-x-auto text-xs">
+                        <code>{chart}</code>
+                    </pre>
+                </details>
             </div>
         );
     }
