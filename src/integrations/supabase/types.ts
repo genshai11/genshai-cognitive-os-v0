@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_ai_settings: {
+        Row: {
+          cliproxy_enabled: boolean
+          cliproxy_url: string | null
+          created_at: string
+          default_chat_model: string | null
+          default_image_model: string | null
+          direct_api_key_encrypted: string | null
+          direct_api_url: string | null
+          direct_provider: string | null
+          id: string
+          model_overrides: Json | null
+          provider_type: string
+          updated_at: string
+        }
+        Insert: {
+          cliproxy_enabled?: boolean
+          cliproxy_url?: string | null
+          created_at?: string
+          default_chat_model?: string | null
+          default_image_model?: string | null
+          direct_api_key_encrypted?: string | null
+          direct_api_url?: string | null
+          direct_provider?: string | null
+          id?: string
+          model_overrides?: Json | null
+          provider_type?: string
+          updated_at?: string
+        }
+        Update: {
+          cliproxy_enabled?: boolean
+          cliproxy_url?: string | null
+          created_at?: string
+          default_chat_model?: string | null
+          default_image_model?: string | null
+          direct_api_key_encrypted?: string | null
+          direct_api_url?: string | null
+          direct_provider?: string | null
+          id?: string
+          model_overrides?: Json | null
+          provider_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       advisor_skills: {
         Row: {
           advisor_id: string
@@ -77,6 +122,39 @@ export type Database = {
           updated_at?: string
           use_cases?: string[]
           user_id?: string
+        }
+        Relationships: []
+      }
+      ai_provider_usage: {
+        Row: {
+          created_at: string
+          function_name: string
+          id: string
+          latency_ms: number | null
+          model: string
+          provider: string
+          status_code: number | null
+          was_fallback: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          function_name: string
+          id?: string
+          latency_ms?: number | null
+          model: string
+          provider: string
+          status_code?: number | null
+          was_fallback?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          function_name?: string
+          id?: string
+          latency_ms?: number | null
+          model?: string
+          provider?: string
+          status_code?: number | null
+          was_fallback?: boolean | null
         }
         Relationships: []
       }
@@ -553,6 +631,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrypt_api_key: { Args: { encrypted_key: string }; Returns: string }
+      encrypt_api_key: { Args: { raw_key: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
