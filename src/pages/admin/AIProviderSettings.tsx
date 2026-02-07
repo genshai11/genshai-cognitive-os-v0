@@ -156,7 +156,7 @@ export default function AIProviderSettings() {
 
             // Only encrypt and save API key if a new one was entered
             if (settings.direct_api_key) {
-                const { data: encrypted, error: encError } = await supabase.rpc('encrypt_api_key', {
+                const { data: encrypted, error: encError } = await (supabase.rpc as any)('encrypt_api_key', {
                     raw_key: settings.direct_api_key,
                 });
                 if (encError) throw encError;
