@@ -22,11 +22,20 @@ Deno.serve(async (req) => {
     const base = endpoint.replace(/\/v1\/?$/, "");
     const modelsUrl = `${base}/v1/models`;
 
+    // Block localhost/private endpoints — they're unreachable from cloud
+    if (/^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/i.test(modelsUrl)) {
+      return new Response(
+        JSON.stringify({ error: "Cannot reach local endpoints from the cloud. Use a public URL or select models manually.", models: [] }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const response = await fetch(modelsUrl, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
+      signal: AbortSignal.timeout(10000),
     });
 
     if (!response.ok) {
