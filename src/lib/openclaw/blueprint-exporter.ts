@@ -263,17 +263,17 @@ export function compileSkillMd(skill: SkillDefinition): OpenClawSkillMd {
     lines.push('## Examples');
     lines.push('');
     for (const ex of skill.examples) {
-      lines.push(`### ${ex.title || 'Example'}`);
+      lines.push(`### Example`);
       if (ex.input) {
         lines.push('**Input:**');
         lines.push('```json');
         lines.push(JSON.stringify(ex.input, null, 2));
         lines.push('```');
       }
-      if (ex.expectedOutput) {
+      if (ex.output) {
         lines.push('**Expected Output:**');
         lines.push('```json');
-        lines.push(JSON.stringify(ex.expectedOutput, null, 2));
+        lines.push(JSON.stringify(ex.output, null, 2));
         lines.push('```');
       }
       lines.push('');

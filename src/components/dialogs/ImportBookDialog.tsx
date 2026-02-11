@@ -61,13 +61,14 @@ export const ImportBookDialog = ({ onImported }: ImportBookDialogProps) => {
       if (genError) throw genError;
 
       const { error: insertError } = await supabase.from('custom_books').insert({
+        id: crypto.randomUUID(),
         title: book.title,
         author: book.author,
         description: book.description,
         key_concepts: book.key_concepts,
-        tags: book.tags,
         color: genData?.color || 'bg-secondary text-secondary-foreground',
         cognitive_blueprint: genData?.blueprint || null,
+        system_prompt: genData?.systemPrompt || `You are an advisor based on the book "${book.title}" by ${book.author}.`,
       });
 
       if (insertError) throw insertError;
