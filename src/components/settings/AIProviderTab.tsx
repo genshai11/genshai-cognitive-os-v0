@@ -144,6 +144,7 @@ export function AIProviderTab() {
       const body: any = {
         providerType,
         messages: [{ role: 'user', content: 'Say "Connection successful!" in one sentence.' }],
+        advisorId: 'first-principles',
       };
 
       if (providerType === '9router') {
