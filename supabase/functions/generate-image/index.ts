@@ -1,4 +1,3 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { getAIProviderConfig, makeAIChatRequest, withModel, getLovableConfig } from "../_shared/ai-provider.ts";
 
 const corsHeaders = {

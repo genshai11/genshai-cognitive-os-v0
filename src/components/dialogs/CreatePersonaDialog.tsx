@@ -46,13 +46,15 @@ export const CreatePersonaDialog = ({ onCreated }: CreatePersonaDialogProps) => 
 
       // Step 3: Save to database
       const { error: insertError } = await supabase.from('custom_personas').insert({
+        id: crypto.randomUUID(),
         name: name.trim(),
-        title: data.title,
+        title: data.title || name.trim(),
         description: data.description,
         tags: data.tags,
         color: data.color,
         wiki_url: wikiUrl.trim() || null,
         cognitive_blueprint: data.blueprint,
+        system_prompt: data.systemPrompt || `You are ${name.trim()}. Respond authentically from this persona's perspective.`,
       });
 
       if (insertError) throw insertError;
