@@ -286,7 +286,87 @@ const minimalistFocus: Theme = {
   effects: { glassmorphism: false, blur: "none", shadows: "none", borderRadius: "0.25rem" },
 };
 
-export const themes: Theme[] = [classic, modernDark, lightAiry, natureZen, vibrantCreative, minimalistFocus];
+// ── Warm Sage (Light) ──
+const warmSageLight: Theme = {
+  id: "warm-sage-light",
+  name: "Warm Sage",
+  description: "Warm orange and sage green, light and inviting",
+  emoji: "🌅",
+  colors: {
+    background: "40 33% 97%",
+    foreground: "30 10% 15%",
+    card: "40 30% 99%",
+    cardForeground: "30 10% 15%",
+    popover: "40 30% 99%",
+    popoverForeground: "30 10% 15%",
+    primary: "28 80% 52%",
+    primaryForeground: "40 33% 97%",
+    secondary: "150 20% 92%",
+    secondaryForeground: "150 25% 25%",
+    accent: "150 25% 40%",
+    accentForeground: "40 33% 97%",
+    muted: "35 20% 93%",
+    mutedForeground: "30 8% 50%",
+    destructive: "0 72% 51%",
+    destructiveForeground: "40 33% 97%",
+    border: "35 18% 88%",
+    input: "35 18% 88%",
+    ring: "28 80% 52%",
+    sidebarBackground: "40 20% 96%",
+    sidebarForeground: "30 10% 25%",
+    sidebarPrimary: "28 80% 52%",
+    sidebarPrimaryForeground: "40 33% 97%",
+    sidebarAccent: "35 20% 93%",
+    sidebarAccentForeground: "30 10% 25%",
+    sidebarBorder: "35 18% 88%",
+    sidebarRing: "28 80% 52%",
+    glowPrimary: "28 80% 52%",
+  },
+  typography: { sans: "DM Sans", serif: "Playfair Display", headingFamily: "serif" },
+  effects: { glassmorphism: false, blur: "none", shadows: "subtle", borderRadius: "0.75rem" },
+};
+
+// ── Warm Sage (Dark) ──
+const warmSageDark: Theme = {
+  id: "warm-sage-dark",
+  name: "Warm Sage Dark",
+  description: "Warm orange and sage green on a cozy dark canvas",
+  emoji: "🌄",
+  colors: {
+    background: "30 15% 8%",
+    foreground: "35 20% 90%",
+    card: "30 15% 11%",
+    cardForeground: "35 20% 90%",
+    popover: "30 15% 11%",
+    popoverForeground: "35 20% 90%",
+    primary: "28 80% 55%",
+    primaryForeground: "30 15% 8%",
+    secondary: "150 15% 18%",
+    secondaryForeground: "150 20% 80%",
+    accent: "150 25% 35%",
+    accentForeground: "35 20% 90%",
+    muted: "30 10% 18%",
+    mutedForeground: "30 10% 55%",
+    destructive: "0 62.8% 30.6%",
+    destructiveForeground: "35 20% 90%",
+    border: "30 10% 20%",
+    input: "30 10% 20%",
+    ring: "28 80% 55%",
+    sidebarBackground: "30 15% 10%",
+    sidebarForeground: "35 20% 85%",
+    sidebarPrimary: "28 80% 55%",
+    sidebarPrimaryForeground: "30 15% 8%",
+    sidebarAccent: "30 10% 15%",
+    sidebarAccentForeground: "35 20% 85%",
+    sidebarBorder: "30 10% 20%",
+    sidebarRing: "28 80% 55%",
+    glowPrimary: "28 80% 55%",
+  },
+  typography: { sans: "DM Sans", serif: "Playfair Display", headingFamily: "serif" },
+  effects: { glassmorphism: true, blur: "lg", shadows: "normal", borderRadius: "0.75rem" },
+};
+
+export const themes: Theme[] = [classic, modernDark, lightAiry, natureZen, vibrantCreative, minimalistFocus, warmSageLight, warmSageDark];
 
 export function getThemeById(id: string): Theme {
   return themes.find((t) => t.id === id) || classic;

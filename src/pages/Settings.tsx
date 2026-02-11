@@ -3,7 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, User, MessageSquare, Sliders, Shield, Palette } from "lucide-react";
+import { Loader2, User, MessageSquare, Sliders, Shield, Palette, Zap } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileInfoTab } from "@/components/settings/ProfileInfoTab";
 import { ResponseStyleTab } from "@/components/settings/ResponseStyleTab";
@@ -11,6 +11,7 @@ import { CommunicationTab } from "@/components/settings/CommunicationTab";
 import { PrivacyTab } from "@/components/settings/PrivacyTab";
 import { ProfileCompletion } from "@/components/settings/ProfileCompletion";
 import { AppearanceTab } from "@/components/settings/AppearanceTab";
+import { AIProviderTab } from "@/components/settings/AIProviderTab";
 
 export interface UserProfile {
   display_name: string | null;
@@ -156,7 +157,7 @@ const Settings = () => {
         <ProfileCompletion profile={profile} />
 
         <Tabs defaultValue="profile" className="mt-6">
-          <TabsList className="grid w-full grid-cols-5 mb-8">
+          <TabsList className="grid w-full grid-cols-6 mb-8">
             <TabsTrigger value="profile" className="gap-1.5 text-xs sm:text-sm">
               <User className="w-4 h-4 hidden sm:block" /> Profile
             </TabsTrigger>
@@ -171,6 +172,9 @@ const Settings = () => {
             </TabsTrigger>
             <TabsTrigger value="privacy" className="gap-1.5 text-xs sm:text-sm">
               <Shield className="w-4 h-4 hidden sm:block" /> Privacy
+            </TabsTrigger>
+            <TabsTrigger value="ai-provider" className="gap-1.5 text-xs sm:text-sm">
+              <Zap className="w-4 h-4 hidden sm:block" /> AI
             </TabsTrigger>
           </TabsList>
 
@@ -188,6 +192,9 @@ const Settings = () => {
           </TabsContent>
           <TabsContent value="privacy">
             <PrivacyTab />
+          </TabsContent>
+          <TabsContent value="ai-provider">
+            <AIProviderTab />
           </TabsContent>
         </Tabs>
       </main>

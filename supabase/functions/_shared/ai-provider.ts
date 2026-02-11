@@ -214,6 +214,38 @@ async function getDirectConfig(settings: any, supabase: any): Promise<AIProvider
 }
 
 /**
+ * User-level provider override from request body.
+ * If the request body contains providerType/endpoint/apiKey/model,
+ * these override the admin settings. Returns null if no user override.
+ */
+export function getUserProviderOverride(body: any): AIProviderConfig | null {
+    const { providerType, endpoint, apiKey, model } = body || {};
+
+    if (!providerType || providerType === 'lovable') return null;
+
+    if (providerType === '9router' || providerType === 'direct') {
+        if (!endpoint || !apiKey || !model) return null;
+
+        // Normalize endpoint to ensure it ends with /chat/completions
+        let apiUrl = endpoint;
+        if (!apiUrl.endsWith('/chat/completions')) {
+            apiUrl = apiUrl.replace(/\/+$/, '');
+            if (!apiUrl.endsWith('/v1')) apiUrl += '/v1';
+            apiUrl += '/chat/completions';
+        }
+
+        return {
+            provider: 'direct',
+            apiUrl,
+            apiKey,
+            model,
+        };
+    }
+
+    return null;
+}
+
+/**
  * Returns a config copy with a different model.
  */
 export function withModel(config: AIProviderConfig, model: string): AIProviderConfig {

@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { getSystemPrompt } from "../_shared/blueprint-compiler.ts";
 import { getSkillContext } from "../_shared/skill-discovery.ts";
-import { getAIProviderConfig, makeAIChatRequest } from "../_shared/ai-provider.ts";
+import { getAIProviderConfig, makeAIChatRequest, getUserProviderOverride } from "../_shared/ai-provider.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -220,7 +220,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { messages, advisorId, userId } = await req.json();
+    const requestBody = await req.json();
+    const { messages, advisorId, userId } = requestBody;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -307,9 +308,10 @@ Only suggest skills for pure computation tasks (no network calls, no file access
 
     console.log("Framework chat - advisor:", advisorId, "userId:", userId || "anonymous", "blueprint:", !!framework.cognitive_blueprint);
 
-    // Get AI provider configuration (Lovable/CLIProxyAPI/Direct)
-    const aiConfig = await getAIProviderConfig(supabaseUrl, supabaseKey);
-    console.log("Using AI provider:", aiConfig.provider, "model:", aiConfig.model);
+    // Get AI provider configuration: user override → admin settings → Lovable fallback
+    const userOverride = getUserProviderOverride(requestBody);
+    const aiConfig = userOverride || await getAIProviderConfig(supabaseUrl, supabaseKey);
+    console.log("Using AI provider:", aiConfig.provider, "model:", aiConfig.model, userOverride ? "(user override)" : "");
 
     // Make AI chat request with configured provider
     const response = await makeAIChatRequest(

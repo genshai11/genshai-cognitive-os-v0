@@ -24,6 +24,7 @@ import BookManager from "./pages/admin/BookManager";
 import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
 import AIProviderSettings from "./pages/admin/AIProviderSettings";
 import Settings from "./pages/Settings";
+import OpenClawDashboard from "./pages/OpenClawDashboard";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/history" element={<History />} />
               <Route path="/skills" element={<ProtectedRoute><Skills /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/openclaw" element={<ProtectedRoute><OpenClawDashboard /></ProtectedRoute>} />
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/personas" element={<AdminRoute><PersonaManager /></AdminRoute>} />
