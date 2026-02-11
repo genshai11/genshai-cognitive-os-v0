@@ -22,31 +22,25 @@ Deno.serve(async (req) => {
 
         console.log("Generating image with prompt:", prompt);
 
-        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-        const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-        // Get admin AI config to check for configured image model
-        const aiConfig = await getAIProviderConfig(supabaseUrl, supabaseKey);
-        
+        console.log("Generating image with prompt:", prompt);
+        // Always use Lovable gateway for image generation since image models
+        // (like google/gemini-2.5-flash-image) are best supported there
         let imageConfig;
         let useModalities = true;
 
-        if (aiConfig.imageModel) {
-            // Use the configured image model with the configured provider
-            imageConfig = withModel(aiConfig, aiConfig.imageModel);
-            console.log("Using configured image model:", imageConfig.model, "provider:", imageConfig.provider);
-        } else {
-            // Fallback: use Lovable gateway with default image model
-            try {
-                const lovableConfig = getLovableConfig();
-                imageConfig = withModel(lovableConfig, 'google/gemini-2.5-flash-image');
-                console.log("No image model configured, falling back to Lovable gateway");
-            } catch {
-                return new Response(
-                    JSON.stringify({ error: "No image model configured and Lovable gateway unavailable. Please configure an image model in Admin > AI Provider Settings." }),
-                    { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-                );
-            }
+        try {
+            const lovableConfig = getLovableConfig();
+            const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+            const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+            const aiConfig = await getAIProviderConfig(supabaseUrl, supabaseKey);
+            const model = aiConfig.imageModel || 'google/gemini-2.5-flash-image';
+            imageConfig = withModel(lovableConfig, model);
+            console.log("Using Lovable gateway for image generation, model:", model);
+        } catch {
+            return new Response(
+                JSON.stringify({ error: "Lovable gateway unavailable for image generation. Please check your configuration." }),
+                { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
         }
 
         const response = await makeAIChatRequest(imageConfig, [
