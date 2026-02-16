@@ -1,73 +1,83 @@
-# Welcome to your Lovable project
+# MindBoard (GENSHAI Mental Model Project)
 
-## Project info
+MindBoard is an AI-assisted thinking workspace for better decisions.  
+It gives users a "personal board of advisors" with distinct mental models, then supports multi-perspective chat, book-based guidance, skill generation, and OpenClaw export workflows.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Core Features
 
-## How can I edit this code?
+- Advisor chat with configurable response style, tone, and complexity
+- Persona chat and book chat flows
+- Mental model library and conversation history
+- Skills library (generate, review, approve/reject, execute)
+- OpenClaw export dashboard for advisor blueprints (`SOUL.md`, `AGENTS.md`, `SKILL.md`)
+- Admin area for personas, frameworks, books, AI provider settings, and analytics
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- Frontend: React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, React Query
+- Backend: Supabase (Auth, Postgres, Edge Functions)
+- AI/Agent integrations: Supabase Edge Functions, provider routing, OpenClaw-oriented export
+- Testing: Vitest + Testing Library
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Architecture at a Glance
 
-Changes made via Lovable will be committed automatically to this repo.
+- `src/`: React application (pages, components, hooks, shared libraries)
+- `supabase/functions/`: Edge Functions for chat, skills, generation, imports, and AI provider tooling
+- `supabase/migrations/`: schema and policy migrations
+- `docs/plans/`: implementation plans and architecture notes
 
-**Use your preferred IDE**
+## Getting Started
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 1. Install dependencies
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+```bash
+npm install
+```
 
-Follow these steps:
+### 2. Configure environment
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Create/update `.env` with:
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```env
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_PUBLISHABLE_KEY=...
+VITE_SUPABASE_PROJECT_ID=...
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 3. Run locally
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+App runs with Vite on local dev server (default: `http://localhost:5173`).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Available Scripts
 
-**Use GitHub Codespaces**
+- `npm run dev` - start development server
+- `npm run build` - production build
+- `npm run build:dev` - development-mode build
+- `npm run preview` - preview production build
+- `npm run lint` - run ESLint
+- `npm run test` - run Vitest once
+- `npm run test:watch` - run Vitest in watch mode
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Supabase Functions in This Repo
 
-## What technologies are used for this project?
+Examples include:
 
-This project is built with:
+- `advisor-chat`
+- `book-chat`
+- `persona-chat`
+- `goodreads-import`
+- `skill-generator`
+- `skill-executor`
+- `generate-advisor`
+- `export-openclaw`
+- `fetch-models`
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+If you plan to run functions locally, make sure Supabase CLI is installed and linked to the project.
 
-## How can I deploy this project?
+## Project Status
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+This repository is actively evolving, with ongoing work around hybrid Brain/Hands architecture and OpenClaw-compatible workflows (see `docs/plans/`).
