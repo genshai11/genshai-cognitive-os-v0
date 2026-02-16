@@ -168,8 +168,17 @@ Be accurate to the book's actual content and teachings.`,
     const aiData = await aiResponse.json();
     let content = aiData.choices?.[0]?.message?.content || "";
     content = content.trim();
+    // Strip thinking tags (e.g. <think>...</think>) that some models prepend
+    content = content.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+    // Strip markdown code fences
     if (content.startsWith("```")) {
       content = content.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+    }
+    // Find the first { and last } to extract JSON object
+    const jsonStart = content.indexOf("{");
+    const jsonEnd = content.lastIndexOf("}");
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      content = content.slice(jsonStart, jsonEnd + 1);
     }
 
     return JSON.parse(content);
