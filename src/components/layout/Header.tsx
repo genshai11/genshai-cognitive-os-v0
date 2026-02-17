@@ -33,7 +33,7 @@ export const Header = () => {
           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
             <Brain className="w-5 h-5 text-primary-foreground" />
           </div>
-          <span className="font-serif font-semibold text-lg">MindBoard</span>
+          <span className="font-serif font-semibold text-lg">Cognitive OS</span>
         </Link>
 
         {/* Desktop nav */}
