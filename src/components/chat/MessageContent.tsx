@@ -7,7 +7,7 @@ import { MermaidBlock } from './MermaidBlock';
 import { ImageBlock } from './ImageBlock';
 import { SkillExecutionBlock } from '../skills/SkillExecutionBlock';
 import { SkillGenerationBlock } from '../skills/SkillGenerationBlock';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -141,7 +141,16 @@ const CALLOUT_PATTERNS: Record<string, { icon: typeof Lightbulb; label: string; 
 };
 
 // ─── Main Component ─────────────────────────────────────────────
-export const MessageContent = ({ content }: MessageContentProps) => {
+export const MessageContent = memo(({ content }: MessageContentProps) => {
+  // Strip <think>...</think> tags (complete or partial/streaming) before rendering
+  const cleanContent = useMemo(() => {
+    // Remove complete <think>...</think> blocks
+    let cleaned = content.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    // Remove partial/unclosed <think> blocks (during streaming)
+    cleaned = cleaned.replace(/<think>[\s\S]*$/gi, '');
+    return cleaned.trim();
+  }, [content]);
+
   // Extract chart, mermaid, image, and skill-execute blocks from content before markdown rendering
   const { processedContent, charts, mermaidDiagrams, images, skillExecutions, skillGenerations } = useMemo(() => {
     const chartBlocks: ChartData[] = [];
@@ -150,7 +159,7 @@ export const MessageContent = ({ content }: MessageContentProps) => {
     const skillBlocks: { skillId: string; skillName: string; input: any }[] = [];
     const skillGenBlocks: { skillDescription: string; advisorId: string; context?: string }[] = [];
 
-    let processed = content
+    let processed = cleanContent
       // Extract chart blocks
       .replace(/```chart\n([\s\S]*?)```/g, (_, json) => {
         try {
@@ -205,7 +214,7 @@ export const MessageContent = ({ content }: MessageContentProps) => {
       skillExecutions: skillBlocks,
       skillGenerations: skillGenBlocks,
     };
-  }, [content]);
+  }, [cleanContent]);
 
   // Split content by chart, mermaid, image, and skill placeholders and render
   const segments = useMemo(() => {
@@ -385,4 +394,7 @@ export const MessageContent = ({ content }: MessageContentProps) => {
       })}
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Only re-render if content actually changed
+  return prevProps.content === nextProps.content;
+});

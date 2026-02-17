@@ -61,13 +61,17 @@ export function useStreamingChat({ functionName, buildBody }: UseStreamingChatOp
       let textBuffer = '';
 
       const updateAssistant = (content: string) => {
-        assistantSoFar = content;
+        // Strip <think>...</think> tags (complete or partial/streaming)
+        let cleaned = content.replace(/<think>[\s\S]*?<\/think>/gi, '');
+        cleaned = cleaned.replace(/<think>[\s\S]*$/gi, '');
+        cleaned = cleaned.trim();
+        assistantSoFar = content; // Keep raw content for accumulation
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (last?.role === 'assistant') {
-            return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
+            return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: cleaned } : m));
           }
-          return [...prev, { role: 'assistant', content: assistantSoFar }];
+          return [...prev, { role: 'assistant', content: cleaned }];
         });
       };
 

@@ -22,25 +22,58 @@ Deno.serve(async (req) => {
 
         console.log("Generating image with prompt:", prompt);
 
-        console.log("Generating image with prompt:", prompt);
-        // Always use Lovable gateway for image generation since image models
-        // (like google/gemini-2.5-flash-image) are best supported there
+        // Respect user's provider configuration for image generation
         let imageConfig;
         let useModalities = true;
 
         try {
-            const lovableConfig = getLovableConfig();
             const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
             const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
             const aiConfig = await getAIProviderConfig(supabaseUrl, supabaseKey);
-            const model = aiConfig.imageModel || 'google/gemini-2.5-flash-image';
-            imageConfig = withModel(lovableConfig, model);
-            console.log("Using Lovable gateway for image generation, model:", model);
-        } catch {
-            return new Response(
-                JSON.stringify({ error: "Lovable gateway unavailable for image generation. Please check your configuration." }),
-                { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
+
+            // Determine which model to use for image generation
+            const imageModel = aiConfig.imageModel || aiConfig.model;
+
+            // Check if the configured provider supports image generation
+            const supportsImages =
+                imageModel.includes('gemini') ||
+                imageModel.includes('image') ||
+                imageModel.includes('dalle') ||
+                imageModel.includes('midjourney');
+
+            if (aiConfig.provider === 'direct' || aiConfig.provider === 'cliproxy') {
+                // Use the configured provider (9router, OpenRouter, etc.)
+                if (supportsImages) {
+                    imageConfig = withModel(aiConfig, imageModel);
+                    console.log(`Using ${aiConfig.provider} provider for image generation, model: ${imageModel}`);
+                } else {
+                    // Configured provider doesn't support images, fall back to Lovable
+                    console.warn(`Configured model ${imageModel} may not support images, falling back to Lovable`);
+                    const lovableConfig = getLovableConfig();
+                    const fallbackModel = 'google/gemini-2.5-flash-image';
+                    imageConfig = withModel(lovableConfig, fallbackModel);
+                    console.log("Falling back to Lovable gateway for image generation, model:", fallbackModel);
+                }
+            } else {
+                // Provider is 'lovable' or fallback
+                const lovableConfig = getLovableConfig();
+                const model = aiConfig.imageModel || 'google/gemini-2.5-flash-image';
+                imageConfig = withModel(lovableConfig, model);
+                console.log("Using Lovable gateway for image generation, model:", model);
+            }
+        } catch (error) {
+            console.error("Failed to configure image generation:", error);
+            // Last resort fallback to Lovable
+            try {
+                const lovableConfig = getLovableConfig();
+                imageConfig = withModel(lovableConfig, 'google/gemini-2.5-flash-image');
+                console.log("Error occurred, using Lovable fallback");
+            } catch {
+                return new Response(
+                    JSON.stringify({ error: "Image generation unavailable. Please check your AI provider configuration." }),
+                    { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
+            }
         }
 
         const response = await makeAIChatRequest(imageConfig, [

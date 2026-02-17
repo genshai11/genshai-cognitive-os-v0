@@ -1,0 +1,129 @@
+# Fix 2: Image Model Routing - Respect Provider Configuration
+
+## File: supabase/functions/generate-image/index.ts
+
+Replace lines 26-44 with this improved implementation:
+
+```typescript
+// BEFORE: Always used Lovable gateway
+// let imageConfig;
+// let useModalities = true;
+// try {
+//     const lovableConfig = getLovableConfig();
+//     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+//     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+//     const aiConfig = await getAIProviderConfig(supabaseUrl, supabaseKey);
+//     const model = aiConfig.imageModel || 'google/gemini-2.5-flash-image';
+//     imageConfig = withModel(lovableConfig, model);
+//     console.log("Using Lovable gateway for image generation, model:", model);
+// } catch {
+//     return new Response(
+//         JSON.stringify({ error: "Lovable gateway unavailable for image generation. Please check your configuration." }),
+//         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+//     );
+// }
+
+// AFTER: Respect user's provider configuration
+let imageConfig;
+let useModalities = true;
+
+try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const aiConfig = await getAIProviderConfig(supabaseUrl, supabaseKey);
+
+    // Determine which model to use for image generation
+    const imageModel = aiConfig.imageModel || aiConfig.model;
+
+    // Check if the configured provider supports image generation
+    const supportsImages =
+        imageModel.includes('gemini') ||
+        imageModel.includes('image') ||
+        imageModel.includes('dalle') ||
+        imageModel.includes('midjourney');
+
+    if (aiConfig.provider === 'direct' || aiConfig.provider === 'cliproxy') {
+        // Use the configured provider (9router, OpenRouter, etc.)
+        if (supportsImages) {
+            imageConfig = withModel(aiConfig, imageModel);
+            console.log(`Using ${aiConfig.provider} provider for image generation, model: ${imageModel}`);
+        } else {
+            // Configured provider doesn't support images, fall back to Lovable
+            console.warn(`Configured model ${imageModel} may not support images, falling back to Lovable`);
+            const lovableConfig = getLovableConfig();
+            const fallbackModel = 'google/gemini-2.5-flash-image';
+            imageConfig = withModel(lovableConfig, fallbackModel);
+            console.log("Falling back to Lovable gateway for image generation, model:", fallbackModel);
+        }
+    } else {
+        // Provider is 'lovable' or fallback
+        const lovableConfig = getLovableConfig();
+        const model = aiConfig.imageModel || 'google/gemini-2.5-flash-image';
+        imageConfig = withModel(lovableConfig, model);
+        console.log("Using Lovable gateway for image generation, model:", model);
+    }
+} catch (error) {
+    console.error("Failed to configure image generation:", error);
+    // Last resort fallback to Lovable
+    try {
+        const lovableConfig = getLovableConfig();
+        imageConfig = withModel(lovableConfig, 'google/gemini-2.5-flash-image');
+        console.log("Error occurred, using Lovable fallback");
+    } catch {
+        return new Response(
+            JSON.stringify({ error: "Image generation unavailable. Please check your AI provider configuration." }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+    }
+}
+```
+
+---
+
+## Optional Enhancement: Add Image Model Discovery
+
+### File: src/pages/admin/AIProviderSettings.tsx
+
+Add button to test image generation with current settings (already exists at line 596-607, but could be enhanced):
+
+```typescript
+// The test button is already present, but you could add a model suggestion feature:
+
+const suggestImageModels = () => {
+  const suggestions: Record<string, string[]> = {
+    'openrouter': [
+      'google/gemini-2.5-flash-image',
+      'google/gemini-3-pro-image-preview',
+    ],
+    'openai': [
+      'dall-e-3',
+      'dall-e-2',
+    ],
+    'anthropic': [
+      'claude-3-opus-20240229', // with vision
+    ],
+  };
+
+  return suggestions[settings.direct_provider] || [];
+};
+
+// Add UI to show suggested models in the Image Model Configuration card
+```
+
+## Testing the Fix
+
+1. Go to Admin → AI Provider Settings
+2. Configure your 9router or OpenRouter provider with an image-capable model
+3. Set the "Image Model ID" field (e.g., `google/gemini-2.5-flash-image`)
+4. Save settings
+5. Test image generation - it should now use your configured provider instead of Lovable
+
+## Supported Image Models by Provider
+
+| Provider | Supported Models |
+|----------|------------------|
+| OpenRouter | `google/gemini-2.5-flash-image`, `google/gemini-3-pro-image-preview` |
+| OpenAI | `dall-e-3`, `dall-e-2` |
+| Google AI | `gemini-2.5-flash-image`, `gemini-3-pro-image-preview` |
+| CometAPI | Supports many image models, check their docs |
+| MegaLLM | May support image models, check their docs |

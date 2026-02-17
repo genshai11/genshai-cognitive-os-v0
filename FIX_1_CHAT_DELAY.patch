@@ -1,0 +1,59 @@
+# Fix 1: Chat Input Delay - Add Memoization to MessageContent
+
+## File: src/components/chat/MessageContent.tsx
+
+### Add React.memo import at the top:
+```typescript
+import { memo } from 'react';
+```
+
+### Wrap the component export with memo:
+```typescript
+// At the bottom of the file, change from:
+export const MessageContent = ({ content }: MessageContentProps) => {
+  // ... component code ...
+};
+
+// To:
+export const MessageContent = memo(({ content }: MessageContentProps) => {
+  // ... component code ...
+}, (prevProps, nextProps) => {
+  // Only re-render if content actually changed
+  return prevProps.content === nextProps.content;
+});
+```
+
+---
+
+## File: src/components/chat/ChatInterface.tsx (Optional Enhancement)
+
+### Add useMemo for better animation performance:
+```typescript
+// Add import
+import { useMemo } from 'react';
+
+// Around line 140, replace the messages.map with useMemo:
+const messageElements = useMemo(() =>
+  messages.map((message, index) => (
+    <motion.div
+      key={index}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+    >
+      <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card border border-border'}`}>
+        {message.role === 'assistant' ? <MessageContent content={message.content} /> : <p className="whitespace-pre-wrap">{message.content}</p>}
+      </div>
+    </motion.div>
+  )),
+  [messages]
+);
+
+// Then use it in JSX:
+<AnimatePresence mode="popLayout">
+  {messageElements}
+</AnimatePresence>
+```
+
+This prevents re-creating all message elements on every keystroke.
