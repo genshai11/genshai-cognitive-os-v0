@@ -23,8 +23,25 @@ export const ImageBlock = ({ prompt, caption }: ImageBlockProps) => {
             setLoading(true);
             setError(false);
 
+            // Read user provider settings (9router/direct) from localStorage
+            let providerSettings: Record<string, string> = {};
+            try {
+                const stored = localStorage.getItem('ai-provider-settings');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (parsed.providerType && parsed.providerType !== 'lovable') {
+                        providerSettings = {
+                            providerType: parsed.providerType,
+                            endpoint: parsed.endpoint || '',
+                            apiKey: parsed.apiKey || '',
+                            model: parsed.model || '',
+                        };
+                    }
+                }
+            } catch { /* ignore parse errors */ }
+
             const { data, error: functionError } = await supabase.functions.invoke('generate-image', {
-                body: { prompt },
+                body: { prompt, ...providerSettings },
             });
 
             if (functionError) {
